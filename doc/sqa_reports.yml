@@ -1,0 +1,6 @@
+Applications:
+    irr_crystal_plasticity:
+        app_types:
+            - IrrCrystalPlasticityApp
+        content_directory: ${ROOT_DIR}/doc/content
+        log_default: WARNING
