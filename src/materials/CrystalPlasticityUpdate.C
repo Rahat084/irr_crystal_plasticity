@@ -10,6 +10,7 @@
 #include "CrystalPlasticityUpdate.h"
 #include "libmesh/int_range.h"
 #include <cmath>
+#include <random>
 
 registerMooseObject("SolidMechanicsApp", CrystalPlasticityUpdate);
 
@@ -40,11 +41,14 @@ CrystalPlasticityUpdate::validParams()
   params.addParam<Real>("n", 100,  "Number of damage loop");
   // Adjustable Parameters
   params.addParam<Real>("eta", 100,  "Kock-Meking shear rate");
-  params.addParam<Real>("hn", 0.125,  "Kock-Meking shear rate");
-  params.addParam<Real>("hd", 0.0.625,  "Kock-Meking shear rate");
+  params.addParam<Real>("hn", 0.125,  "dislocation density harding coefficient");
+  params.addParam<Real>("hd", 0.625,  "damage loop density hardening coefficient");
   params.addParam<Real>("g0", 90,  "Initial Slip Ressistance");
-  params.addParam<Real>("gamma_dot_0", 3*10E4,  "Initial Slip Rate");
+  params.addParam<Real>("ao", 3*10E4,  "Initial Slip Rate");
   params.addParam<Real>("xm", 0.05,  "Slip Rate Evolution Power Law exponent");
+  //Additional Param
+  params.addParam<Real>("cell_vol", 27E-18,  "Simulation Cell Volume");
+  params.addParam<Real>("number_damage_loop", 100,  "Number of dislocation loop caused by irradiation damage");
 
 
   params.addParam<MaterialPropertyName>(
@@ -76,33 +80,37 @@ CrystalPlasticityUpdate::CrystalPlasticityUpdate(
     //Kocks-Mecking Parameters
     _k1(getParam<Real>("k1")),
     _k20(getParam<Real>("k20")),
+    _number_damage_loop(getParam<Real>("number_damage_loop")),
     _gamma_dot_k0(getParam<Real>("gamma_dot_k0")),
     //Adjustable Parameters
     _eta(getParam<Real>("eta")),
     _hn(getParam<Real>("hn")),
     _hd(getParam<Real>("hd")),
     _g0(getParam<Real>("g0")),
-    _gamma_dot_0(getParam<Real>("gamma_dot_0")),
+    _ao(getParam<Real>("ao")),
     _xm(getParam<Real>("xm")),
-
+    //Additional Parameter
+    _cell_vol(getParam<Real>("cell_vol")),
     // resize vectors used in the consititutive slip hardening
     //_hb(_number_slip_systems, 0.0),
+    //_slip_increment(_number_slip_systems, 0.0),
 //    _slip_resistance_increment(_number_slip_systems, 0.0),
     _dislocation_density_increment(_number_slip_systems, 0.0),
-    _damage_loop_density_increment(LIBMESH_DIM, LIBMESH_DIM, 0.0)
+    _damage_loop_density_increment(RankTwoTensor::initNone),
     // resize local caching vectors used for substepping
     _previous_substep_slip_resistance(_number_slip_systems, 0.0),
-    _slip_resistance_before_update(_number_slip_systems, 0.0),
     _previous_substep_dislocation_density(_number_slip_systems, 0.0),
+    _previous_substep_damage_loop_density(RankTwoTensor::initNone),
+    _slip_resistance_before_update(_number_slip_systems, 0.0),
     _dislocation_density_before_update(_number_slip_systems, 0.0),
-    _previous_substep_damage_loop_density(LIBMESH_DIM, LIBMESH_DIM, 0.0)
-    _damage_loop_density_before_update(LIBMESH_DIM, LIBMESH_DIM, 0.0)
+    _damage_loop_density_before_update(RankTwoTensor::initNone),
     // Initiate State Variables
     _dislocation_density(declareProperty<std::vector<Real>>(_base_name + "dislocation_density")),
     _dislocation_density_old(getMaterialPropertyOld<std::vector<Real>>(_base_name + "dislocation_density")),
     _damage_loop_density(declareProperty<RankTwoTensor>(_base_name + "damage_loop_density")),
     _damage_loop_density_old(getMaterialPropertyOld<RankTwoTensor>(_base_name + "damage_loop_density")),
 
+    _slip_increment(declareProperty<std::vector<Real>>(_base_name + "slip_increment")),
     // Twinning contributions, if used
     _include_twinning_in_Lp(parameters.isParamValid("total_twin_volume_fraction")),
      _twin_volume_fraction_total(_include_twinning_in_Lp
@@ -119,7 +127,7 @@ CrystalPlasticityUpdate::initiateDamageLoopDensity( std::vector<RealVectorValue>
     std::mt19937 gen(rd());
     std::uniform_int_distribution<> distrib(0, _number_slip_systems);
 
-	RankTwoTensor H = 0; 
+	RankTwoTensor H; 
 	RankTwoTensor Identity = RankTwoTensor::Identity();
 	//For now single crystal
 	RankTwoTensor crysrot = RankTwoTensor::Identity();
@@ -127,16 +135,16 @@ CrystalPlasticityUpdate::initiateDamageLoopDensity( std::vector<RealVectorValue>
     for (const auto i : make_range(_number_damage_loop))
     {
 	unsigned int randint =  distrib(gen);
-	local_loop_normal.zero();
+	local_loop_normal.assign(3, 0); //= 0.0;
 	for (const auto j : make_range(LIBMESH_DIM))
 	  for (const auto k : make_range(LIBMESH_DIM))
 	  {
-	local_loop_normal(j) +=  crysrot(j, k) * plane_normal_vector[randint](k);
+	local_loop_normal[j] +=  crysrot(j, k) * plane_normal_vector[randint](k);
 	  }
 	for (const auto j : make_range(LIBMESH_DIM))
 	  for (const auto k : make_range(LIBMESH_DIM))
 	  {
-	H(j, k) += _dl * (Identity(j, k) - local_loop_normal(j) * local_loop_normal(k));
+	H(j, k) += 100*_b * (Identity(j, k) - local_loop_normal[j] * local_loop_normal[k]);
     }
 }
 	H = (3 * H)/_cell_vol;
@@ -167,7 +175,7 @@ CrystalPlasticityUpdate::setInitialConstitutiveVariableValues()
   _dislocation_density[_qp] = _dislocation_density[_qp];
   _previous_substep_dislocation_density = _dislocation_density[_qp];
   _damage_loop_density[_qp] = _damage_loop_density_old[_qp];
-  _previous_substep_damage_loop_density[_qp] = _damage_loop_density_old[_qp];
+  _previous_substep_damage_loop_density = _damage_loop_density_old[_qp];
 }
 
 void
@@ -254,18 +262,19 @@ CrystalPlasticityUpdate::cacheStateVariablesBeforeUpdate()
 {
   _slip_resistance_before_update = _slip_resistance[_qp];
   _dislocation_density_before_update = _dislocation_density[_qp];
-  _damage_loop_denisity_before_update = _damage_loop_denisity[_qp];
+  _damage_loop_density_before_update = _damage_loop_density[_qp];
 }
 
 void
 CrystalPlasticityUpdate::calculateStateVariableEvolutionRateComponent()
 {
-    _damage_loop_density_increment[i].zero() ;
+    RankTwoTensor N;
+    _damage_loop_density_increment = 0.0;
   for (const auto i : make_range(_number_slip_systems))
   {
     // Clear out increment from the previous iteration
     //_slip_resistance_increment[i] = 0.0;
-    _dislocation_density_increment[i].zero() ;
+    _dislocation_density_increment[i] = 0.0;
     //
     _dislocation_density_increment[i] = 
 	_k1 * std::sqrt( _rho0 * _dislocation_density[_qp][i]) * _slip_increment[_qp][i] - _k20 * _gamma_dot_k0 * _dislocation_density[_qp][i];  

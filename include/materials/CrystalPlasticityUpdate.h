@@ -29,7 +29,7 @@ public:
   CrystalPlasticityUpdate(const InputParameters & parameters);
 
 protected:
-RankTwoTensor initiateDamageLoopDensity();
+RankTwoTensor initiateDamageLoopDensity( std::vector<RealVectorValue> & plane_normal_vector);
   /**
    * initializes the stateful properties such as
    * stress, plastic deformation gradient, slip system resistances, etc.
@@ -110,9 +110,9 @@ RankTwoTensor initiateDamageLoopDensity();
   const Real _mu0;
   ///@}
   /// @{ Kocks-Mecking Parameters
-  lionst Real _k1;
+  const Real _k1;
   const Real _k20;
-  //const Real _n;
+  const Real _number_damage_loop;
   const Real _gamma_dot_k0;
   ///@}
   /// @{ Adjustable parameters
@@ -129,21 +129,7 @@ RankTwoTensor initiateDamageLoopDensity();
    * Slip system interaction matrix used to calculate the hardening contributions
    * from the self and latent slip systems, from Kalidindi et al (1992).
    */
-  std::vector<Real> _hb;
-  /**
-   * Dislocation Density Material Property Variables
-   */
-  MaterialProperty<std::vector<Real>> &  _dislocation_density;
-  const MaterialProperty<std::vector<Real>> &  _dislocation_density_old;
-  /**
-   * Damage Density Material Property Variables
-   */
-  MaterialProperty<RankTwoTensor> & _damage_loop_density;
-  const MaterialProperty>RankTwoTensor> & _damage_loop_density_old;
-  ///@}
-
-  /// Current slip increment material property
-  MaterialProperty<std::vector<Real>> & _slip_increment;
+  //std::vector<Real> _hb;
 
   /// Increment of increased resistance for each slip system
   //std::vector<Real> _slip_resistance_increment;
@@ -171,7 +157,22 @@ RankTwoTensor initiateDamageLoopDensity();
    */
   std::vector<Real> _slip_resistance_before_update;
   std::vector<Real> _dislocation_density_before_update;
-  RankTwoTensor _damge_loop_density_before_update;
+  RankTwoTensor _damage_loop_density_before_update;
+
+  /**
+   * Dislocation Density Material Property Variables
+   */
+  MaterialProperty<std::vector<Real>> &  _dislocation_density;
+  const MaterialProperty<std::vector<Real>> &  _dislocation_density_old;
+  /**
+   * Damage Density Material Property Variables
+   */
+  MaterialProperty<RankTwoTensor> & _damage_loop_density;
+  const MaterialProperty<RankTwoTensor> & _damage_loop_density_old;
+  ///@}
+
+  /// Current slip increment material property
+  MaterialProperty<std::vector<Real>> & _slip_increment;
 
   /**
    * Flag to include the total twin volume fraction in the plastic velocity
