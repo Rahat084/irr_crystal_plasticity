@@ -112,7 +112,7 @@ RankTwoTensor initiateDamageLoopDensity( std::vector<RealVectorValue> & plane_no
   /// @{ Kocks-Mecking Parameters
   const Real _k1;
   const Real _k20;
-  const Real _number_damage_loop;
+  const Real _number_damage_loops;
   const Real _gamma_dot_k0;
   ///@}
   /// @{ Adjustable parameters
@@ -172,7 +172,7 @@ RankTwoTensor initiateDamageLoopDensity( std::vector<RealVectorValue> & plane_no
   ///@}
 
   /// Current slip increment material property
-  MaterialProperty<std::vector<Real>> & _slip_increment;
+  //MaterialProperty<std::vector<Real>> & _slip_increment;
 
   /**
    * Flag to include the total twin volume fraction in the plastic velocity

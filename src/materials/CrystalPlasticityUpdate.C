@@ -48,7 +48,7 @@ CrystalPlasticityUpdate::validParams()
   params.addParam<Real>("xm", 0.05,  "Slip Rate Evolution Power Law exponent");
   //Additional Param
   params.addParam<Real>("cell_vol", 27E-18,  "Simulation Cell Volume");
-  params.addParam<Real>("number_damage_loop", 100,  "Number of dislocation loop caused by irradiation damage");
+  params.addParam<Real>("number_damage_loops", 100,  "Number of dislocation loop caused by irradiation damage");
 
 
   params.addParam<MaterialPropertyName>(
@@ -80,7 +80,7 @@ CrystalPlasticityUpdate::CrystalPlasticityUpdate(
     //Kocks-Mecking Parameters
     _k1(getParam<Real>("k1")),
     _k20(getParam<Real>("k20")),
-    _number_damage_loop(getParam<Real>("number_damage_loop")),
+    _number_damage_loops(getParam<Real>("number_damage_loops")),
     _gamma_dot_k0(getParam<Real>("gamma_dot_k0")),
     //Adjustable Parameters
     _eta(getParam<Real>("eta")),
@@ -110,7 +110,7 @@ CrystalPlasticityUpdate::CrystalPlasticityUpdate(
     _damage_loop_density(declareProperty<RankTwoTensor>(_base_name + "damage_loop_density")),
     _damage_loop_density_old(getMaterialPropertyOld<RankTwoTensor>(_base_name + "damage_loop_density")),
 
-    _slip_increment(declareProperty<std::vector<Real>>(_base_name + "slip_increment")),
+//    _slip_increment(declareProperty<std::vector<Real>>(_base_name + "slip_increment")),
     // Twinning contributions, if used
     _include_twinning_in_Lp(parameters.isParamValid("total_twin_volume_fraction")),
      _twin_volume_fraction_total(_include_twinning_in_Lp
@@ -132,7 +132,7 @@ CrystalPlasticityUpdate::initiateDamageLoopDensity( std::vector<RealVectorValue>
 	//For now single crystal
 	RankTwoTensor crysrot = RankTwoTensor::Identity();
 	std::vector<Real> local_loop_normal;
-    for (const auto i : make_range(_number_damage_loop))
+    for (const auto i : make_range(_number_damage_loops))
     {
 	unsigned int randint =  distrib(gen);
 	local_loop_normal.assign(3, 0); //= 0.0;
@@ -155,11 +155,12 @@ void
 CrystalPlasticityUpdate::initQpStatefulProperties()
 {
   CrystalPlasticityStressUpdateBase::initQpStatefulProperties();
+   _dislocation_density[_qp].resize(_number_slip_systems);
   for (const auto i : make_range(_number_slip_systems))
   {
     _slip_resistance[_qp][i] = _g0;
     _slip_increment[_qp][i] = 0.0;
-    _dislocation_density[_qp][i] = _rho0;
+   _dislocation_density[_qp][i] = _rho0;
   }
   // Randomly choose one of the slip planes
   _damage_loop_density[_qp] = initiateDamageLoopDensity( _slip_plane_normal); 
@@ -172,8 +173,8 @@ CrystalPlasticityUpdate::setInitialConstitutiveVariableValues()
   // Would also set old dislocation densities here if included in this model
   _slip_resistance[_qp] = _slip_resistance_old[_qp];
   _previous_substep_slip_resistance = _slip_resistance_old[_qp];
-  _dislocation_density[_qp] = _dislocation_density[_qp];
-  _previous_substep_dislocation_density = _dislocation_density[_qp];
+  _dislocation_density[_qp] = _dislocation_density_old[_qp];
+  _previous_substep_dislocation_density = _dislocation_density_old[_qp];
   _damage_loop_density[_qp] = _damage_loop_density_old[_qp];
   _previous_substep_damage_loop_density = _damage_loop_density_old[_qp];
 }
