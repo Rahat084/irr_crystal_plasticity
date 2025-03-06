@@ -172,7 +172,7 @@ RankTwoTensor initiateDamageLoopDensity( std::vector<RealVectorValue> & plane_no
   ///@}
 
   /// Current slip increment material property
-  MaterialProperty<std::vector<Real>> & _slip_increment;
+  //MaterialProperty<std::vector<Real>> & _slip_increment;
 
   /**
    * Flag to include the total twin volume fraction in the plastic velocity
