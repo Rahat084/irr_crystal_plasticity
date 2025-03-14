@@ -125,7 +125,7 @@ CrystalPlasticityUpdate::initiateDamageLoopDensity( std::vector<RealVectorValue>
 {
     std::random_device rd;
     std::mt19937 gen(rd());
-    std::uniform_int_distribution<> distrib(0, _number_slip_systems);
+    std::uniform_int_distribution<> distrib(0, plane_normal_vector.size());
 
 	RankTwoTensor H; 
 	RankTwoTensor Identity = RankTwoTensor::Identity();
@@ -280,8 +280,8 @@ CrystalPlasticityUpdate::calculateStateVariableEvolutionRateComponent()
     _dislocation_density_increment[i] = 
 	_k1 * std::sqrt( _rho0 * _dislocation_density[_qp][i]) * _slip_increment[_qp][i] - _k20 * _gamma_dot_k0 * _dislocation_density[_qp][i];  
 
-  for (const auto j : make_range(_number_slip_systems))
-  for (const auto k : make_range(_number_slip_systems))
+    for (const auto j : make_range(LIBMESH_DIM))
+      for (const auto k : make_range(LIBMESH_DIM))
   {
       N(j, k) = _slip_plane_normal[i](j) * _slip_plane_normal[i](k);
   }
@@ -325,6 +325,9 @@ CrystalPlasticityUpdate::updateStateVariables()
   for (const auto i : make_range(_number_slip_systems))
   {
       _dislocation_density_increment[i] *= _substep_dt;
+    if (_dislocation_density_increment[i] < 0.0)
+      _dislocation_density[_qp][i] = _previous_substep_dislocation_density[i];
+    else
       _dislocation_density[_qp][i] = _previous_substep_dislocation_density[i] + _dislocation_density_increment[i];
       
       /*
@@ -335,8 +338,8 @@ CrystalPlasticityUpdate::updateStateVariables()
       _slip_resistance[_qp][i] =
           _previous_substep_slip_resistance[i] + _slip_resistance_increment[i];
 	  */
-  for (const auto j : make_range(_number_slip_systems))
-  for (const auto k : make_range(_number_slip_systems))
+  for (const auto j : make_range(LIBMESH_DIM))
+  for (const auto k : make_range(LIBMESH_DIM))
   {
       N(j, k) = _slip_plane_normal[i](j) * _slip_plane_normal[i](k);
   }
