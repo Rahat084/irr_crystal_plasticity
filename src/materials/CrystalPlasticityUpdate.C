@@ -49,6 +49,10 @@ CrystalPlasticityUpdate::validParams()
   //Additional Param
   params.addParam<Real>("cell_vol", 27E-18,  "Simulation Cell Volume");
   params.addParam<Real>("number_damage_loops", 100,  "Number of dislocation loop caused by irradiation damage");
+  params.addRequiredParam<FileName>(
+      "damage_plane_file_name",
+      "Name of the file containing the damage planes containing irradiation based damage loop, one damage plane per row"
+      " Usually one or more schmid plane");
 
 
   params.addParam<MaterialPropertyName>(
@@ -82,6 +86,7 @@ CrystalPlasticityUpdate::CrystalPlasticityUpdate(
     _k20(getParam<Real>("k20")),
     _number_damage_loops(getParam<Real>("number_damage_loops")),
     _gamma_dot_k0(getParam<Real>("gamma_dot_k0")),
+    //_number_possible_damage_plane(getParam<unsigned int>("number_possible_damage_plane")),
     //Adjustable Parameters
     _eta(getParam<Real>("eta")),
     _hn(getParam<Real>("hn")),
@@ -96,6 +101,8 @@ CrystalPlasticityUpdate::CrystalPlasticityUpdate(
     //_slip_increment(_number_slip_systems, 0.0),
 //    _slip_resistance_increment(_number_slip_systems, 0.0),
     _dislocation_density_increment(_number_slip_systems, 0.0),
+    _damage_plane_file_name(getParam<FileName>("damage_plane_file_name")),
+    //_damage_plane_normal(_number_possible_damage_plane),
     _damage_loop_density_increment(RankTwoTensor::initNone),
     // resize local caching vectors used for substepping
     _previous_substep_slip_resistance(_number_slip_systems, 0.0),
@@ -121,11 +128,54 @@ CrystalPlasticityUpdate::CrystalPlasticityUpdate(
 }
 
 RankTwoTensor
-CrystalPlasticityUpdate::initiateDamageLoopDensity( std::vector<RealVectorValue> & plane_normal_vector)
+CrystalPlasticityUpdate::initiateDamageLoopDensity()
 {
+  // read in the damage plane data from auxiliary text file
+  MooseUtils::DelimitedFileReader _dreader(_damage_plane_file_name);
+  _dreader.setFormatFlag(MooseUtils::DelimitedFileReader::FormatFlag::ROWS);
+  _dreader.read();
+
+  // check the size of the input
+  /*
+  if (_dreader.getData().size() != _number_possible_damage_plane)
+    paramError(
+        "number_possible_damage_plane",
+        "The number of rows in the slip system file should match the number of slip system.");
+
+	*/
+  const unsigned int number_possible_damage_plane  = _dreader.getData().size();
+  std::vector<RealVectorValue> damage_plane_normal(number_possible_damage_plane);
+
+  for (const auto i : make_range(number_possible_damage_plane))
+  {
+    // initialize to zero
+    damage_plane_normal[i].zero();
+  }
+
+  if (_crystal_lattice_type == CrystalLatticeType::HCP)
+    transformHexagonalMillerBravaisSlipSystems(_dreader);
+  else if (_crystal_lattice_type == CrystalLatticeType::BCC ||
+           _crystal_lattice_type == CrystalLatticeType::FCC)
+  {
+    for (const auto i : make_range(number_possible_damage_plane))
+    {
+      // directly grab the raw data and scale it by the unit cell dimension
+      for (const auto j : index_range(_dreader.getData(i)))
+      {
+          damage_plane_normal[i](j) = _dreader.getData(i)[j] / _unit_cell_dimension[j];
+      }
+    }
+  }
+
+  for (const auto i : make_range(number_possible_damage_plane))
+  {
+    // normalize
+    damage_plane_normal[i] /= damage_plane_normal[i].norm();
+  }
+
     std::random_device rd;
     std::mt19937 gen(rd());
-    std::uniform_int_distribution<> distrib(0, plane_normal_vector.size());
+    std::uniform_int_distribution<> distrib(0, number_possible_damage_plane);
 
 	RankTwoTensor H; 
 	RankTwoTensor Identity = RankTwoTensor::Identity();
@@ -139,7 +189,7 @@ CrystalPlasticityUpdate::initiateDamageLoopDensity( std::vector<RealVectorValue>
 	for (const auto j : make_range(LIBMESH_DIM))
 	  for (const auto k : make_range(LIBMESH_DIM))
 	  {
-	local_loop_normal[j] +=  crysrot(j, k) * plane_normal_vector[randint](k);
+	local_loop_normal[j] +=  crysrot(j, k) *damage_plane_normal[randint](k);
 	  }
 	for (const auto j : make_range(LIBMESH_DIM))
 	  for (const auto k : make_range(LIBMESH_DIM))
@@ -163,7 +213,7 @@ CrystalPlasticityUpdate::initQpStatefulProperties()
    _dislocation_density[_qp][i] = _rho0;
   }
   // Randomly choose one of the slip planes
-  _damage_loop_density[_qp] = initiateDamageLoopDensity( _slip_plane_normal); 
+  _damage_loop_density[_qp] = initiateDamageLoopDensity(); 
 }
 
 

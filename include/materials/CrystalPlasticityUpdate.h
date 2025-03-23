@@ -29,7 +29,7 @@ public:
   CrystalPlasticityUpdate(const InputParameters & parameters);
 
 protected:
-RankTwoTensor initiateDamageLoopDensity( std::vector<RealVectorValue> & plane_normal_vector);
+RankTwoTensor initiateDamageLoopDensity();
   /**
    * initializes the stateful properties such as
    * stress, plastic deformation gradient, slip system resistances, etc.
@@ -114,6 +114,8 @@ RankTwoTensor initiateDamageLoopDensity( std::vector<RealVectorValue> & plane_no
   const Real _k20;
   const Real _number_damage_loops;
   const Real _gamma_dot_k0;
+  ///Maximum number of possible irradiation damage plane in the  crystalline material being modeled
+  //const unsigned int _number_possible_damage_plane;
   ///@}
   /// @{ Adjustable parameters
   const Real _eta;
@@ -135,6 +137,9 @@ RankTwoTensor initiateDamageLoopDensity( std::vector<RealVectorValue> & plane_no
   //std::vector<Real> _slip_resistance_increment;
   /// Increment of increased dislocation multiplier (h) for each slip system
   std::vector<Real> _dislocation_density_increment;
+  /// File should contain damage plane normal vectors
+  std::string _damage_plane_file_name;
+  //std::vector<RealVectorValue> _damage_plane_normal;
   /// Increment of increased damage loop for each slip system
   RankTwoTensor _damage_loop_density_increment;
 
