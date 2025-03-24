@@ -31,23 +31,22 @@ CrystalPlasticityUpdate::validParams()
   params.addParam<Real>("gss_initial", 60.8, "initial lattice friction strength of the material");
   */
   // Material Parameters
-  params.addParam<Real>("b", 2.48E-10,  "burgers vector");
-  params.addParam<Real>("rho0", 10E12,  "Initial Dislocation Density");
-  params.addParam<Real>("mu0", 86E3,  "Shear Modulus");
+  params.addParam<Real>("b", 2.48E-7,  "burgers vector (mm)");
+  params.addParam<Real>("rho0", 10E6,  "Initial Dislocation Density (mm^-2)");
+  params.addParam<Real>("mu0", 86E3,  "Shear Modulus (MPa)");
   // Kock-Mecking Parameters
   params.addParam<Real>("k1", 450,  "Dislocation Storage Constant");
   params.addParam<Real>("k20", 14,  "Dislocation Anhilation Constant");
   params.addParam<Real>("gamma_dot_k0", 10E10,  "Kock-Meking shear rate");
-  params.addParam<Real>("n", 100,  "Number of damage loop");
   // Adjustable Parameters
-  params.addParam<Real>("eta", 100,  "Kock-Meking shear rate");
+  params.addParam<Real>("eta", 100,  "Dislocation Anhalization Efficiency");
   params.addParam<Real>("hn", 0.125,  "dislocation density harding coefficient");
   params.addParam<Real>("hd", 0.625,  "damage loop density hardening coefficient");
-  params.addParam<Real>("g0", 90,  "Initial Slip Ressistance");
-  params.addParam<Real>("ao", 3*10E4,  "Initial Slip Rate");
+  params.addParam<Real>("g0", 90,  "Initial Slip Ressistance (MPa)");
+  params.addParam<Real>("ao", 3*10E4,  "Initial Slip Rate ");
   params.addParam<Real>("xm", 0.05,  "Slip Rate Evolution Power Law exponent");
   //Additional Param
-  params.addParam<Real>("cell_vol", 27E-18,  "Simulation Cell Volume");
+  params.addParam<Real>("cell_vol", 27,  "Simulation Cell Volume (mm^3)");
   params.addParam<Real>("number_damage_loops", 100,  "Number of dislocation loop caused by irradiation damage");
   params.addRequiredParam<FileName>(
       "damage_plane_file_name",

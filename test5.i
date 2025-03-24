@@ -10,10 +10,25 @@
     ny = 2
     nz = 2
     elem_type = HEX8
+    xmax = 3
+    xmin = 0
+    ymax = 3
+    ymin = 0 
+    zmax = 3
+    zmin = 0
+
   []
 []
 
 [AuxVariables]
+  [stress_vm]
+    order = CONSTANT
+    family = MONOMIAL
+  []
+  [stress_zz]
+    order = CONSTANT
+    family = MONOMIAL
+  []
   [fp_zz]
     order = CONSTANT
     family = MONOMIAL
@@ -226,6 +241,21 @@
 []
 
 [AuxKernels]
+  [stress_vm]
+    type = RankTwoScalarAux
+    rank_two_tensor = stress
+    variable = stress_vm
+    scalar_type = VonMisesStress
+    execute_on = timestep_end
+  []
+  [stress_zz]
+    type = RankTwoAux
+    variable = fp_zz
+    rank_two_tensor = stress
+    index_j = 2
+    index_i = 2
+    execute_on = timestep_end
+  []
   [fp_zz]
     type = RankTwoAux
     variable = fp_zz
@@ -603,14 +633,14 @@
     type = FunctionDirichletBC
     variable = disp_z
     boundary = front
-    function = '-0.025*t'
+    function = '0.025*t'
   []
 []
 
 [Materials]
   [elasticity_tensor]
     type = ComputeElasticityTensorCP
-    C_ijkl = '1.684e5 1.214e5 1.214e5 1.684e5 1.214e5 1.684e5 0.754e5 0.754e5 0.754e5' # roughly copper
+    C_ijkl = '2.36e5 1.34e5 1.34e5 2.36e5 1.34e5 2.36e5 1.19e5 1.19e5 1.19e5' # roughly Iron
     fill_method = symmetric9
   []
   [stress]
@@ -627,6 +657,14 @@
 []
 
 [Postprocessors]
+  [stress_vm]
+    type = ElementAverageValue
+    variable = stress_vm
+  []
+  [stress_zz]
+    type = ElementAverageValue
+    variable = stress_zz
+  []
   [fp_zz]
     type = ElementAverageValue
     variable = fp_zz
@@ -856,6 +894,7 @@
 []
 
 [Outputs]
+  exodus = true
   csv = true
   perf_graph = true
 []
