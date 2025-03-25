@@ -19,17 +19,6 @@ CrystalPlasticityUpdate::validParams()
 {
   InputParameters params = CrystalPlasticityStressUpdateBase::validParams();
   params.addClassDescription("Kalidindi version of homogeneous crystal plasticity.");
-  /*
-  params.addParam<Real>("T", 295.0, "temperature");
-  params.addParam<Real>("T_critical", 400.0, "critical temperature");
-  params.addParam<Real>("r", 1.0, "Latent hardening coefficient");
-  params.addParam<Real>("h", 541.5, "hardening constants");
-  params.addParam<Real>("t_sat", 109.8, "saturated slip system strength");
-  params.addParam<Real>("gss_a", 2.5, "coefficient for hardening");
-  params.addParam<Real>("ao", 0.001, "slip rate coefficient");
-  params.addParam<Real>("xm", 0.1, "exponent for slip rate");
-  params.addParam<Real>("gss_initial", 60.8, "initial lattice friction strength of the material");
-  */
   // Material Parameters
   params.addParam<Real>("b", 2.48E-7,  "burgers vector (mm)");
   params.addParam<Real>("rho0", 10E6,  "Initial Dislocation Density (mm^-2)");
@@ -64,18 +53,6 @@ CrystalPlasticityUpdate::validParams()
 CrystalPlasticityUpdate::CrystalPlasticityUpdate(
     const InputParameters & parameters)
   : CrystalPlasticityStressUpdateBase(parameters),
-    /*
-    // Constitutive values
-    _T(getParam<Real>("T")),
-    _T_critical(getParam<Real>("T_critical")),
-    _r(getParam<Real>("r")),
-    _h(getParam<Real>("h")),
-    _tau_sat(getParam<Real>("t_sat")),
-    _gss_a(getParam<Real>("gss_a")),
-    _ao(getParam<Real>("ao")),
-    _xm(getParam<Real>("xm")),
-    _gss_initial(getParam<Real>("gss_initial")),
-    */
     //Material Parameters
     _b(getParam<Real>("b")),
     _rho0(getParam<Real>("rho0")),
@@ -95,10 +72,6 @@ CrystalPlasticityUpdate::CrystalPlasticityUpdate(
     _xm(getParam<Real>("xm")),
     //Additional Parameter
     _cell_vol(getParam<Real>("cell_vol")),
-    // resize vectors used in the consititutive slip hardening
-    //_hb(_number_slip_systems, 0.0),
-    //_slip_increment(_number_slip_systems, 0.0),
-//    _slip_resistance_increment(_number_slip_systems, 0.0),
     _dislocation_density_increment(_number_slip_systems, 0.0),
     _damage_plane_file_name(getParam<FileName>("damage_plane_file_name")),
     //_damage_plane_normal(_number_possible_damage_plane),
@@ -115,8 +88,6 @@ CrystalPlasticityUpdate::CrystalPlasticityUpdate(
     _dislocation_density_old(getMaterialPropertyOld<std::vector<Real>>(_base_name + "dislocation_density")),
     _damage_loop_density(declareProperty<RankTwoTensor>(_base_name + "damage_loop_density")),
     _damage_loop_density_old(getMaterialPropertyOld<RankTwoTensor>(_base_name + "damage_loop_density")),
-
-//    _slip_increment(declareProperty<std::vector<Real>>(_base_name + "slip_increment")),
     // Twinning contributions, if used
     _include_twinning_in_Lp(parameters.isParamValid("total_twin_volume_fraction")),
      _twin_volume_fraction_total(_include_twinning_in_Lp
@@ -134,14 +105,7 @@ CrystalPlasticityUpdate::initiateDamageLoopDensity()
   _dreader.setFormatFlag(MooseUtils::DelimitedFileReader::FormatFlag::ROWS);
   _dreader.read();
 
-  // check the size of the input
-  /*
-  if (_dreader.getData().size() != _number_possible_damage_plane)
-    paramError(
-        "number_possible_damage_plane",
-        "The number of rows in the slip system file should match the number of slip system.");
 
-	*/
   const unsigned int number_possible_damage_plane  = _dreader.getData().size();
   std::vector<RealVectorValue> damage_plane_normal(number_possible_damage_plane);
 
@@ -323,9 +287,8 @@ CrystalPlasticityUpdate::calculateStateVariableEvolutionRateComponent()
   for (const auto i : make_range(_number_slip_systems))
   {
     // Clear out increment from the previous iteration
-    //_slip_resistance_increment[i] = 0.0;
     _dislocation_density_increment[i] = 0.0;
-    //
+
     _dislocation_density_increment[i] = 
 	_k1 * std::sqrt( _rho0 * _dislocation_density[_qp][i]) * _slip_increment[_qp][i] - _k20 * _gamma_dot_k0 * _dislocation_density[_qp][i];  
 
@@ -335,31 +298,6 @@ CrystalPlasticityUpdate::calculateStateVariableEvolutionRateComponent()
       N(j, k) = _slip_plane_normal[i](j) * _slip_plane_normal[i](k);
   }
     _damage_loop_density_increment += -_eta * N.doubleContraction(_damage_loop_density[_qp]) * N * _slip_increment[_qp][i];
-    /*
-
-    _hb[i] = _h * std::pow(std::abs(1.0 - _slip_resistance[_qp][i] / _tau_sat), _gss_a);
-    const Real hsign = 1.0 - _slip_resistance[_qp][i] / _tau_sat;
-    if (hsign < 0.0)
-      _hb[i] *= -1.0;
-  }
-
-  for (const auto i : make_range(_number_slip_systems))
-  {
-    for (const auto j : make_range(_number_slip_systems))
-    {
-      unsigned int iplane, jplane;
-      iplane = i / 3;
-      jplane = j / 3;
-
-      if (iplane == jplane) // self vs. latent hardening
-        _slip_resistance_increment[i] +=
-            std::abs(_slip_increment[_qp][j]) * _hb[j]; // q_{ab} = 1.0 for self hardening
-      else
-        _slip_resistance_increment[i] +=
-            std::abs(_slip_increment[_qp][j]) * _r * _hb[j]; // latent hardenign
-    }
-  }
-  */
 
 }
 }
@@ -379,14 +317,7 @@ CrystalPlasticityUpdate::updateStateVariables()
     else
       _dislocation_density[_qp][i] = _previous_substep_dislocation_density[i] + _dislocation_density_increment[i];
       
-      /*
-    _slip_resistance_increment[i] *= _substep_dt;
-    if (_previous_substep_slip_resistance[i] < _zero_tol && _slip_resistance_increment[i] < 0.0)
-      _slip_resistance[_qp][i] = _previous_substep_slip_resistance[i];
-    else
-      _slip_resistance[_qp][i] =
-          _previous_substep_slip_resistance[i] + _slip_resistance_increment[i];
-	  */
+
   for (const auto j : make_range(LIBMESH_DIM))
   for (const auto k : make_range(LIBMESH_DIM))
   {

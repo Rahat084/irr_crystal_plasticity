@@ -6,9 +6,9 @@
   [cube]
     type = GeneratedMeshGenerator
     dim = 3
-    nx = 2
-    ny = 2
-    nz = 2
+    nx = 10 
+    ny = 10
+    nz = 10
     elem_type = HEX8
     xmax = 3
     xmin = 0
@@ -888,9 +888,9 @@
   nl_rel_tol = 1e-10
   nl_abs_step_tol = 1e-10
 
-  dt = 0.005
-  dtmin = 0.01
-  num_steps = 10
+  dt = 0.01
+  dtmin = 0.005
+  num_steps = 120
 []
 
 [Outputs]

@@ -131,15 +131,11 @@ RankTwoTensor initiateDamageLoopDensity();
    * Slip system interaction matrix used to calculate the hardening contributions
    * from the self and latent slip systems, from Kalidindi et al (1992).
    */
-  //std::vector<Real> _hb;
 
-  /// Increment of increased resistance for each slip system
-  //std::vector<Real> _slip_resistance_increment;
   /// Increment of increased dislocation multiplier (h) for each slip system
   std::vector<Real> _dislocation_density_increment;
   /// File should contain damage plane normal vectors
   std::string _damage_plane_file_name;
-  //std::vector<RealVectorValue> _damage_plane_normal;
   /// Increment of increased damage loop for each slip system
   RankTwoTensor _damage_loop_density_increment;
 
@@ -176,8 +172,6 @@ RankTwoTensor initiateDamageLoopDensity();
   const MaterialProperty<RankTwoTensor> & _damage_loop_density_old;
   ///@}
 
-  /// Current slip increment material property
-  //MaterialProperty<std::vector<Real>> & _slip_increment;
 
   /**
    * Flag to include the total twin volume fraction in the plastic velocity
