@@ -29,6 +29,14 @@ public:
   CrystalPlasticityUpdate(const InputParameters & parameters);
 
 protected:
+/**
+ * Initializes the irradiated damaged planes  
+ */
+void getDamageSystem();
+/**
+ * Initializes the damage tensor
+ */
+
 RankTwoTensor initiateDamageLoopDensity();
   /**
    * initializes the stateful properties such as
@@ -112,7 +120,7 @@ RankTwoTensor initiateDamageLoopDensity();
   /// @{ Kocks-Mecking Parameters
   const Real _k1;
   const Real _k20;
-  const Real _number_damage_loops;
+  unsigned int _number_damage_loops;
   const Real _gamma_dot_k0;
   ///Maximum number of possible irradiation damage plane in the  crystalline material being modeled
   //const unsigned int _number_possible_damage_plane;
@@ -125,6 +133,7 @@ RankTwoTensor initiateDamageLoopDensity();
   const Real _ao;
   const Real _xm;
   const Real _cell_vol;
+  const Real _rho_l;
   ///
 
   /**
@@ -135,7 +144,9 @@ RankTwoTensor initiateDamageLoopDensity();
   /// Increment of increased dislocation multiplier (h) for each slip system
   std::vector<Real> _dislocation_density_increment;
   /// File should contain damage plane normal vectors
+  const unsigned int _number_possible_damage_plane;
   std::string _damage_plane_file_name;
+  std::vector<RealVectorValue> _damage_plane_normal;
   /// Increment of increased damage loop for each slip system
   RankTwoTensor _damage_loop_density_increment;
 
@@ -170,6 +181,7 @@ RankTwoTensor initiateDamageLoopDensity();
    */
   MaterialProperty<RankTwoTensor> & _damage_loop_density;
   const MaterialProperty<RankTwoTensor> & _damage_loop_density_old;
+  MaterialProperty<RankTwoTensor> & _equivalent_slip_increment;
   ///@}
 
 

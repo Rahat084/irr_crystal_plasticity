@@ -6,21 +6,25 @@
   [cube]
     type = GeneratedMeshGenerator
     dim = 3
-    nx = 10 
-    ny = 10
-    nz = 10
+    nx = 2 
+    ny = 2
+    nz = 2
     elem_type = HEX8
-    xmax = 3
+    xmax = 3E-3
     xmin = 0
-    ymax = 3
+    ymax = 3E-3
     ymin = 0 
-    zmax = 3
+    zmax = 3E-3
     zmin = 0
 
   []
 []
 
 [AuxVariables]
+  [plastic_strain_inc]
+    order = CONSTANT
+    family = MONOMIAL
+  []
   [stress_vm]
     order = CONSTANT
     family = MONOMIAL
@@ -233,6 +237,10 @@
     order = CONSTANT
     family = MONOMIAL
   []
+  [total_plastic_starin]
+    order = CONSTANT
+    family = MONOMIAL
+  []
 []
 
 [Physics/SolidMechanics/QuasiStatic/all]
@@ -241,6 +249,14 @@
 []
 
 [AuxKernels]
+  [plastic_strain_inc]
+    type = RankTwoAux
+    variable = plastic_strain_inc
+    rank_two_tensor = equivalent_slip_increment
+    index_j = 2
+    index_i = 2
+    execute_on = timestep_end
+  []
   [stress_vm]
     type = RankTwoScalarAux
     rank_two_tensor = stress
@@ -250,7 +266,7 @@
   []
   [stress_zz]
     type = RankTwoAux
-    variable = fp_zz
+    variable = stress_zz
     rank_two_tensor = stress
     index_j = 2
     index_i = 2
@@ -345,8 +361,6 @@
    type = MaterialStdVectorAux
    variable = slip_increment_11
    property = slip_increment
-   index = 11
-   execute_on = timestep_end
   []
   [slip_increment_12]
    type = MaterialStdVectorAux
@@ -633,7 +647,7 @@
     type = FunctionDirichletBC
     variable = disp_z
     boundary = front
-    function = '0.025*t'
+    function = '0.3*t'
   []
 []
 
@@ -652,6 +666,7 @@
     type = CrystalPlasticityUpdate
     number_slip_systems = 48
     slip_sys_file_name = input_slip_sys_bcc48.txt
+    number_possible_damage_plane = 4
     damage_plane_file_name = input_damage_plane.txt
   []
 []
@@ -795,14 +810,6 @@
   []
   [slip_increment_30]
     type = ElementAverageValue
-    variable = slip_increment_30
-  []
-  [slip_increment_31]
-    type = ElementAverageValue
-    variable = slip_increment_31
-  []
-  [slip_increment_32]
-    type = ElementAverageValue
     variable = slip_increment_32
   []
   [slip_increment_33]
@@ -888,9 +895,9 @@
   nl_rel_tol = 1e-10
   nl_abs_step_tol = 1e-10
 
-  dt = 0.01
-  dtmin = 0.005
-  num_steps = 120
+  dt = 1E-5
+  dtmin = 1E-8
+  num_steps = 100
 []
 
 [Outputs]

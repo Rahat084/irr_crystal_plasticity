@@ -35,8 +35,10 @@ CrystalPlasticityUpdate::validParams()
   params.addParam<Real>("ao", 3*10E4,  "Initial Slip Rate ");
   params.addParam<Real>("xm", 0.05,  "Slip Rate Evolution Power Law exponent");
   //Additional Param
-  params.addParam<Real>("cell_vol", 27,  "Simulation Cell Volume (mm^3)");
+  params.addParam<Real>("cell_vol", 27E-9,  "Simulation Cell Volume (mm^3)");
+  params.addParam<Real>("rho_l", 1.63E16,  "Irradiation damage loop density (mm^-2)");
   params.addParam<Real>("number_damage_loops", 100,  "Number of dislocation loop caused by irradiation damage");
+  params.addRequiredParam<unsigned int>("number_possible_damage_plane",  "number of damage planes where irradiation caused damage loop can exists");
   params.addRequiredParam<FileName>(
       "damage_plane_file_name",
       "Name of the file containing the damage planes containing irradiation based damage loop, one damage plane per row"
@@ -72,9 +74,11 @@ CrystalPlasticityUpdate::CrystalPlasticityUpdate(
     _xm(getParam<Real>("xm")),
     //Additional Parameter
     _cell_vol(getParam<Real>("cell_vol")),
+    _rho_l(getParam<Real>("rho_l")),
     _dislocation_density_increment(_number_slip_systems, 0.0),
+    _number_possible_damage_plane(getParam<unsigned int>("number_possible_damage_plane")),
     _damage_plane_file_name(getParam<FileName>("damage_plane_file_name")),
-    //_damage_plane_normal(_number_possible_damage_plane),
+    _damage_plane_normal(_number_possible_damage_plane),
     _damage_loop_density_increment(RankTwoTensor::initNone),
     // resize local caching vectors used for substepping
     _previous_substep_slip_resistance(_number_slip_systems, 0.0),
@@ -88,63 +92,69 @@ CrystalPlasticityUpdate::CrystalPlasticityUpdate(
     _dislocation_density_old(getMaterialPropertyOld<std::vector<Real>>(_base_name + "dislocation_density")),
     _damage_loop_density(declareProperty<RankTwoTensor>(_base_name + "damage_loop_density")),
     _damage_loop_density_old(getMaterialPropertyOld<RankTwoTensor>(_base_name + "damage_loop_density")),
+    _equivalent_slip_increment(declareProperty<RankTwoTensor>(_base_name + "equivalent_slip_increment")),
     // Twinning contributions, if used
     _include_twinning_in_Lp(parameters.isParamValid("total_twin_volume_fraction")),
      _twin_volume_fraction_total(_include_twinning_in_Lp
                                      ? &getMaterialPropertyOld<Real>("total_twin_volume_fraction")
                                      : nullptr)
  {
-
+getDamageSystem();
 }
 
-RankTwoTensor
-CrystalPlasticityUpdate::initiateDamageLoopDensity()
+void
+CrystalPlasticityUpdate::getDamageSystem()
 {
   // read in the damage plane data from auxiliary text file
   MooseUtils::DelimitedFileReader _dreader(_damage_plane_file_name);
   _dreader.setFormatFlag(MooseUtils::DelimitedFileReader::FormatFlag::ROWS);
   _dreader.read();
 
+  // check the size of the input
+  if (_dreader.getData().size() != _number_possible_damage_plane)
+    paramError(
+       "number_possible_damage_plane",
+        "The number of rows in the input damage file should match the number of possible damage plane where irradiation damage exists.");
 
-  const unsigned int number_possible_damage_plane  = _dreader.getData().size();
-  std::vector<RealVectorValue> damage_plane_normal(number_possible_damage_plane);
-
-  for (const auto i : make_range(number_possible_damage_plane))
+  for (const auto i : make_range(_number_possible_damage_plane))
   {
     // initialize to zero
-    damage_plane_normal[i].zero();
+    _damage_plane_normal[i].zero();
   }
 
-  if (_crystal_lattice_type == CrystalLatticeType::HCP)
-    transformHexagonalMillerBravaisSlipSystems(_dreader);
-  else if (_crystal_lattice_type == CrystalLatticeType::BCC ||
-           _crystal_lattice_type == CrystalLatticeType::FCC)
-  {
-    for (const auto i : make_range(number_possible_damage_plane))
+    for (const auto i : make_range(_number_possible_damage_plane))
     {
       // directly grab the raw data and scale it by the unit cell dimension
       for (const auto j : index_range(_dreader.getData(i)))
       {
-          damage_plane_normal[i](j) = _dreader.getData(i)[j] / _unit_cell_dimension[j];
+          _damage_plane_normal[i](j) = _dreader.getData(i)[j] / _unit_cell_dimension[j];
       }
     }
-  }
 
-  for (const auto i : make_range(number_possible_damage_plane))
+  for (const auto i : make_range(_number_possible_damage_plane))
   {
     // normalize
-    damage_plane_normal[i] /= damage_plane_normal[i].norm();
+    _damage_plane_normal[i] /= _damage_plane_normal[i].norm();
   }
+	_number_damage_loops =
+	    static_cast<int>(std::round(_rho_l* _cell_vol * 100 * _b/3));
+
+}
+
+RankTwoTensor
+CrystalPlasticityUpdate::initiateDamageLoopDensity()
+{
 
     std::random_device rd;
     std::mt19937 gen(rd());
-    std::uniform_int_distribution<> distrib(0, number_possible_damage_plane);
+    std::uniform_int_distribution<> distrib(0, _number_possible_damage_plane);
 
 	RankTwoTensor H; 
 	RankTwoTensor Identity = RankTwoTensor::Identity();
 	//For now single crystal
 	RankTwoTensor crysrot = RankTwoTensor::Identity();
 	std::vector<Real> local_loop_normal;
+
     for (const auto i : make_range(_number_damage_loops))
     {
 	unsigned int randint =  distrib(gen);
@@ -152,7 +162,7 @@ CrystalPlasticityUpdate::initiateDamageLoopDensity()
 	for (const auto j : make_range(LIBMESH_DIM))
 	  for (const auto k : make_range(LIBMESH_DIM))
 	  {
-	local_loop_normal[j] +=  crysrot(j, k) *damage_plane_normal[randint](k);
+	local_loop_normal[j] +=  crysrot(j, k) * _damage_plane_normal[randint](k);
 	  }
 	for (const auto j : make_range(LIBMESH_DIM))
 	  for (const auto k : make_range(LIBMESH_DIM))
@@ -236,6 +246,7 @@ CrystalPlasticityUpdate::calculateEquivalentSlipIncrement(
   // else // if no twinning volume fraction material property supplied, use base class
   //   CrystalPlasticityStressUpdateBase::calculateEquivalentSlipIncrement(equivalent_slip_increment);
   CrystalPlasticityStressUpdateBase::calculateEquivalentSlipIncrement(equivalent_slip_increment);
+  _equivalent_slip_increment[_qp] = equivalent_slip_increment;
 }
 
 void
