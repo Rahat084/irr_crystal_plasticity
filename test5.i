@@ -21,7 +21,7 @@
 []
 
 [AuxVariables]
-  [plastic_strain_inc]
+  [eff_plastic_strain_inc]
     order = CONSTANT
     family = MONOMIAL
   []
@@ -249,12 +249,10 @@
 []
 
 [AuxKernels]
-  [plastic_strain_inc]
-    type = RankTwoAux
-    variable = plastic_strain_inc
-    rank_two_tensor = equivalent_slip_increment
-    index_j = 2
-    index_i = 2
+  [eff_plastic_strain_inc]
+    type = MaterialRealAux
+    variable = eff_plastic_strain_inc
+    property = effective_equivalent_slip_increment
     execute_on = timestep_end
   []
   [stress_vm]
@@ -672,6 +670,10 @@
 []
 
 [Postprocessors]
+  [eff_plastic_strain_inc]
+    type = ElementAverageValue
+    variable = eff_plastic_strain_inc
+  []
   [stress_vm]
     type = ElementAverageValue
     variable = stress_vm
@@ -897,7 +899,7 @@
 
   dt = 1E-5
   dtmin = 1E-8
-  num_steps = 100
+  num_steps = 50
 []
 
 [Outputs]

@@ -182,6 +182,7 @@ RankTwoTensor initiateDamageLoopDensity();
   MaterialProperty<RankTwoTensor> & _damage_loop_density;
   const MaterialProperty<RankTwoTensor> & _damage_loop_density_old;
   MaterialProperty<RankTwoTensor> & _equivalent_slip_increment;
+  MaterialProperty<Real> & _effective_equivalent_slip_increment;
   ///@}
 
 

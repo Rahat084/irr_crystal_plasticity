@@ -93,6 +93,7 @@ CrystalPlasticityUpdate::CrystalPlasticityUpdate(
     _damage_loop_density(declareProperty<RankTwoTensor>(_base_name + "damage_loop_density")),
     _damage_loop_density_old(getMaterialPropertyOld<RankTwoTensor>(_base_name + "damage_loop_density")),
     _equivalent_slip_increment(declareProperty<RankTwoTensor>(_base_name + "equivalent_slip_increment")),
+    _effective_equivalent_slip_increment(declareProperty<Real>(_base_name + "effective_equivalent_slip_increment")),
     // Twinning contributions, if used
     _include_twinning_in_Lp(parameters.isParamValid("total_twin_volume_fraction")),
      _twin_volume_fraction_total(_include_twinning_in_Lp
@@ -247,6 +248,7 @@ CrystalPlasticityUpdate::calculateEquivalentSlipIncrement(
   //   CrystalPlasticityStressUpdateBase::calculateEquivalentSlipIncrement(equivalent_slip_increment);
   CrystalPlasticityStressUpdateBase::calculateEquivalentSlipIncrement(equivalent_slip_increment);
   _equivalent_slip_increment[_qp] = equivalent_slip_increment;
+  _effective_equivalent_slip_increment[_qp] = std::sqrt( 2.0 / 3.0 * equivalent_slip_increment.doubleContraction( equivalent_slip_increment));
 }
 
 void
@@ -334,7 +336,7 @@ CrystalPlasticityUpdate::updateStateVariables()
   {
       N(j, k) = _slip_plane_normal[i](j) * _slip_plane_normal[i](k);
   }
-  _slip_resistance[_qp][i] = _g0 + _mu0 * _b * (std::sqrt(_hn * _dislocation_density[_qp][i]) + std::sqrt( _hd * N.doubleContraction( _damage_loop_density[_qp])));  
+  _slip_resistance[_qp][i] = _mu0 * _b * (std::sqrt(_hn * _dislocation_density[_qp][i]) + std::sqrt( _hd * N.doubleContraction( _damage_loop_density[_qp])));  
 
 
     if (_slip_resistance[_qp][i] < 0.0)
