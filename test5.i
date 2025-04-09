@@ -25,6 +25,14 @@
     order = CONSTANT
     family = MONOMIAL
   []
+  [avg_slip_resistance_dislocation_comp]
+    order = CONSTANT
+    family = MONOMIAL
+  []
+  [avg_slip_resistance_damage_comp]
+    order = CONSTANT
+    family = MONOMIAL
+  []
   [stress_vm]
     order = CONSTANT
     family = MONOMIAL
@@ -253,6 +261,18 @@
     type = MaterialRealAux
     variable = eff_plastic_strain_inc
     property = effective_equivalent_slip_increment
+    execute_on = timestep_end
+  []
+  [avg_slip_resistance_dislocation_comp]
+    type = MaterialRealAux
+    variable = avg_slip_resistance_dislocation_comp
+    property = avg_slip_resistance_dislocation
+    execute_on = timestep_end
+  []
+  [avg_slip_resistance_damage_comp]
+    type = MaterialRealAux
+    variable = avg_slip_resistance_damage_comp
+    property = avg_slip_resistance_damage
     execute_on = timestep_end
   []
   [stress_vm]
@@ -673,6 +693,14 @@
   [eff_plastic_strain_inc]
     type = ElementAverageValue
     variable = eff_plastic_strain_inc
+  []
+  [avg_slip_resistance_dislocation_comp]
+    type = ElementAverageValue
+    variable = avg_slip_resistance_dislocation_comp
+  []
+  [avg_slip_resistance_damage_comp]
+    type = ElementAverageValue
+    variable = avg_slip_resistance_damage_comp
   []
   [stress_vm]
     type = ElementAverageValue
