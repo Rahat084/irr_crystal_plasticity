@@ -37,7 +37,7 @@ CrystalPlasticityUpdate::validParams()
   params.addParam<Real>("xm", 0.05,  "Slip Rate Evolution Power Law exponent");
   //Additional Param
   params.addParam<Real>("cell_vol", 27E-9,  "Simulation Cell Volume (mm^3)");
-  params.addParam<Real>("rho_l", 1.63E16,  "Irradiation damage loop density (mm^-2)");
+  params.addParam<Real>("rho_l", 1.63E13,  "Irradiation damage loop density (mm^-2)");
   params.addParam<Real>("number_damage_loops", 100,  "Number of dislocation loop caused by irradiation damage");
   params.addRequiredParam<unsigned int>("number_possible_damage_plane",  "number of damage planes where irradiation caused damage loop can exists");
   params.addRequiredParam<FileName>(
@@ -141,7 +141,7 @@ CrystalPlasticityUpdate::getDamageSystem()
     _damage_plane_normal[i] /= _damage_plane_normal[i].norm();
   }
 	_number_damage_loops =
-	    static_cast<int>(std::round(_rho_l* _cell_vol * 100 * _b/3));
+	    static_cast<int>(std::round(_rho_l * _cell_vol));
 
 }
 
@@ -171,11 +171,10 @@ CrystalPlasticityUpdate::initiateDamageLoopDensity()
 	for (const auto j : make_range(LIBMESH_DIM))
 	  for (const auto k : make_range(LIBMESH_DIM))
 	  {
-	H(j, k) += 100*_b * (Identity(j, k) - local_loop_normal[j] * local_loop_normal[k]);
+	H(j, k) +=  (Identity(j, k) - local_loop_normal[j] * local_loop_normal[k]);
     }
 }
-	H = (3 * H)/_cell_vol;
-	return H;
+	return  (3 * 100 * _b * H)/_cell_vol;
 	}
 
 void
@@ -190,7 +189,7 @@ CrystalPlasticityUpdate::initQpStatefulProperties()
    _dislocation_density[_qp][i] = _rho0;
   }
   // Randomly choose one of the slip planes
-  _damage_loop_density[_qp] = initiateDamageLoopDensity(); 
+  _damage_loop_density[_qp] = initiateDamageLoopDensity; 
 }
 
 
