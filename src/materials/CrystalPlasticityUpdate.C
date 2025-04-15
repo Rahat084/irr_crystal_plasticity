@@ -80,6 +80,7 @@ CrystalPlasticityUpdate::CrystalPlasticityUpdate(
     _number_possible_damage_plane(getParam<unsigned int>("number_possible_damage_plane")),
     _damage_plane_file_name(getParam<FileName>("damage_plane_file_name")),
     _damage_plane_normal(_number_possible_damage_plane),
+    _damage_loop_density_initial(RankTwoTensor::initNone),
     _damage_loop_density_increment(RankTwoTensor::initNone),
     // resize local caching vectors used for substepping
     _previous_substep_slip_resistance(_number_slip_systems, 0.0),
@@ -97,6 +98,7 @@ CrystalPlasticityUpdate::CrystalPlasticityUpdate(
     _effective_equivalent_slip_increment(declareProperty<Real>(_base_name + "effective_equivalent_slip_increment")),
     _avg_slip_resistance_dislocation(declareProperty<Real>(_base_name + "avg_slip_resistance_dislocation")),
     _avg_slip_resistance_damage(declareProperty<Real>(_base_name + "avg_slip_resistance_damage")),
+    _slip_resistance_damage(declareProperty<std::vector<Real>>(_base_name + "slip_resistance_damage")),
     // Twinning contributions, if used
     _include_twinning_in_Lp(parameters.isParamValid("total_twin_volume_fraction")),
      _twin_volume_fraction_total(_include_twinning_in_Lp
@@ -104,6 +106,7 @@ CrystalPlasticityUpdate::CrystalPlasticityUpdate(
                                      : nullptr)
  {
 getDamageSystem();
+initiateDamageLoopDensity();
 }
 
 void
@@ -145,7 +148,7 @@ CrystalPlasticityUpdate::getDamageSystem()
 
 }
 
-RankTwoTensor
+void
 CrystalPlasticityUpdate::initiateDamageLoopDensity()
 {
 
@@ -174,7 +177,7 @@ CrystalPlasticityUpdate::initiateDamageLoopDensity()
 	H(j, k) +=  (Identity(j, k) - local_loop_normal[j] * local_loop_normal[k]);
     }
 }
-	return  (3 * 100 * _b * H)/_cell_vol;
+	_damage_loop_density_initial =  (3 * 100 * _b * H)/_cell_vol;
 	}
 
 void
@@ -189,7 +192,7 @@ CrystalPlasticityUpdate::initQpStatefulProperties()
    _dislocation_density[_qp][i] = _rho0;
   }
   // Randomly choose one of the slip planes
-  _damage_loop_density[_qp] = initiateDamageLoopDensity; 
+  _damage_loop_density[_qp] = _damage_loop_density_initial; 
 }
 
 
@@ -349,6 +352,7 @@ _slip_resistance[_qp][i] = slip_resistance_dislocation_component[i] + slip_resis
   }
   _avg_slip_resistance_dislocation[_qp] = std::accumulate(slip_resistance_dislocation_component.begin(), slip_resistance_dislocation_component.end(),0.0)/_number_slip_systems;
   _avg_slip_resistance_damage[_qp] = std::accumulate(slip_resistance_damage_component.begin(), slip_resistance_damage_component.end(), 0.0)/_number_slip_systems;
+  _slip_resistance_damage[_qp] = slip_resistance_damage_component;
 
   return true;
 }

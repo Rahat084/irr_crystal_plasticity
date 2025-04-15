@@ -37,7 +37,7 @@ void getDamageSystem();
  * Initializes the damage tensor
  */
 
-RankTwoTensor initiateDamageLoopDensity();
+void initiateDamageLoopDensity();
   /**
    * initializes the stateful properties such as
    * stress, plastic deformation gradient, slip system resistances, etc.
@@ -148,6 +148,7 @@ RankTwoTensor initiateDamageLoopDensity();
   std::string _damage_plane_file_name;
   std::vector<RealVectorValue> _damage_plane_normal;
   /// Increment of increased damage loop for each slip system
+  RankTwoTensor _damage_loop_density_initial;
   RankTwoTensor _damage_loop_density_increment;
 
   /**
@@ -185,6 +186,7 @@ RankTwoTensor initiateDamageLoopDensity();
   MaterialProperty<Real> & _effective_equivalent_slip_increment;
   MaterialProperty<Real> & _avg_slip_resistance_dislocation;
   MaterialProperty<Real> & _avg_slip_resistance_damage;
+  MaterialProperty<std::vector<Real>> & _slip_resistance_damage;
   ///@}
 
 
