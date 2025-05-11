@@ -7,16 +7,17 @@
 //* Licensed under LGPL 2.1, please see LICENSE for details
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
-#include "CrystalPlasticityUpdate.h"
+#include "CrystalPlasticityUpdateIrr.h"
+#include "RotationTensor.h"
 #include "libmesh/int_range.h"
 #include <cmath>
 #include <random>
 #include <numeric>
 
-registerMooseObject("SolidMechanicsApp", CrystalPlasticityUpdate);
+registerMooseObject("SolidMechanicsApp", CrystalPlasticityUpdateIrr);
 
 InputParameters
-CrystalPlasticityUpdate::validParams()
+CrystalPlasticityUpdateIrr::validParams()
 {
   InputParameters params = CrystalPlasticityStressUpdateBase::validParams();
   params.addClassDescription("Kalidindi version of homogeneous crystal plasticity.");
@@ -44,6 +45,10 @@ CrystalPlasticityUpdate::validParams()
       "damage_plane_file_name",
       "Name of the file containing the damage planes containing irradiation based damage loop, one damage plane per row"
       " Usually one or more schmid plane");
+  params.addParam<UserObjectName>("read_prop_user_object",
+                                  "The ElementReadPropertyFile "
+                                  "GeneralUserObject to read element "
+                                  "specific property values from file");
 
 
   params.addParam<MaterialPropertyName>(
@@ -53,7 +58,7 @@ CrystalPlasticityUpdate::validParams()
   return params;
 }
 
-CrystalPlasticityUpdate::CrystalPlasticityUpdate(
+CrystalPlasticityUpdateIrr::CrystalPlasticityUpdateIrr(
     const InputParameters & parameters)
   : CrystalPlasticityStressUpdateBase(parameters),
     //Material Parameters
@@ -99,6 +104,9 @@ CrystalPlasticityUpdate::CrystalPlasticityUpdate(
     _avg_slip_resistance_dislocation(declareProperty<Real>(_base_name + "avg_slip_resistance_dislocation")),
     _avg_slip_resistance_damage(declareProperty<Real>(_base_name + "avg_slip_resistance_damage")),
     _slip_resistance_damage(declareProperty<std::vector<Real>>(_base_name + "slip_resistance_damage")),
+    _read_prop_user_object(isParamValid("read_prop_user_object")
+                               ? &getUserObject<PropertyReadFile>("read_prop_user_object")
+                               : nullptr),
     // Twinning contributions, if used
     _include_twinning_in_Lp(parameters.isParamValid("total_twin_volume_fraction")),
      _twin_volume_fraction_total(_include_twinning_in_Lp
@@ -110,7 +118,7 @@ initiateDamageLoopDensity();
 }
 
 void
-CrystalPlasticityUpdate::getDamageSystem()
+CrystalPlasticityUpdateIrr::getDamageSystem()
 {
   // read in the damage plane data from auxiliary text file
   MooseUtils::DelimitedFileReader _dreader(_damage_plane_file_name);
@@ -149,7 +157,7 @@ CrystalPlasticityUpdate::getDamageSystem()
 }
 
 void
-CrystalPlasticityUpdate::initiateDamageLoopDensity()
+CrystalPlasticityUpdateIrr::initiateDamageLoopDensity()
 {
 
     std::random_device rd;
@@ -179,10 +187,22 @@ CrystalPlasticityUpdate::initiateDamageLoopDensity()
 }
 	_damage_loop_density_initial =  (3 * 100 * _b * H)/_cell_vol;
 	}
-
-void
-CrystalPlasticityUpdate::initQpStatefulProperties()
+RankTwoTensor 
+CrystalPlasticityUpdateIrr::computeQpCrysrot()
 {
+    RealVectorValue Euler_angles(3);
+    Euler_angles(0) = _read_prop_user_object->getData(_current_elem, 0);
+    Euler_angles(1) = _read_prop_user_object->getData(_current_elem, 1);
+    Euler_angles(2) = _read_prop_user_object->getData(_current_elem, 2);
+
+    RotationTensor rotMat(Euler_angles);
+    return rotMat.transpose();
+
+}
+void
+CrystalPlasticityUpdateIrr::initQpStatefulProperties()
+{
+   RankTwoTensor crysrot; 
   CrystalPlasticityStressUpdateBase::initQpStatefulProperties();
    _dislocation_density[_qp].resize(_number_slip_systems);
   for (const auto i : make_range(_number_slip_systems))
@@ -191,13 +211,19 @@ CrystalPlasticityUpdate::initQpStatefulProperties()
     _slip_increment[_qp][i] = 0.0;
    _dislocation_density[_qp][i] = _rho0;
   }
-  // Randomly choose one of the slip planes
+  if (_read_prop_user_object)
+  {
+   crysrot = computeQpCrysrot();
+  _damage_loop_density[_qp] = _damage_loop_density_initial;
+  _damage_loop_density[_qp].rotate( crysrot); 
+  }
+  else
   _damage_loop_density[_qp] = _damage_loop_density_initial; 
 }
 
 
 void
-CrystalPlasticityUpdate::setInitialConstitutiveVariableValues()
+CrystalPlasticityUpdateIrr::setInitialConstitutiveVariableValues()
 {
   // Would also set old dislocation densities here if included in this model
   _slip_resistance[_qp] = _slip_resistance_old[_qp];
@@ -209,7 +235,7 @@ CrystalPlasticityUpdate::setInitialConstitutiveVariableValues()
 }
 
 void
-CrystalPlasticityUpdate::setSubstepConstitutiveVariableValues()
+CrystalPlasticityUpdateIrr::setSubstepConstitutiveVariableValues()
 {
   // Would also set substepped dislocation densities here if included in this model
   _slip_resistance[_qp] = _previous_substep_slip_resistance;
@@ -218,7 +244,7 @@ CrystalPlasticityUpdate::setSubstepConstitutiveVariableValues()
 }
 
 bool
-CrystalPlasticityUpdate::calculateSlipRate()
+CrystalPlasticityUpdateIrr::calculateSlipRate()
 {
   for (const auto i : make_range(_number_slip_systems))
   {
@@ -240,7 +266,7 @@ CrystalPlasticityUpdate::calculateSlipRate()
 }
 
 void
-CrystalPlasticityUpdate::calculateEquivalentSlipIncrement(
+CrystalPlasticityUpdateIrr::calculateEquivalentSlipIncrement(
     RankTwoTensor & equivalent_slip_increment)
 {
   // if (_include_twinning_in_Lp)
@@ -257,7 +283,7 @@ CrystalPlasticityUpdate::calculateEquivalentSlipIncrement(
 }
 
 void
-CrystalPlasticityUpdate::calculateConstitutiveSlipDerivative(
+CrystalPlasticityUpdateIrr::calculateConstitutiveSlipDerivative(
     std::vector<Real> & dslip_dtau)
 {
   for (const auto i : make_range(_number_slip_systems))
@@ -272,7 +298,7 @@ CrystalPlasticityUpdate::calculateConstitutiveSlipDerivative(
 }
 
 bool
-CrystalPlasticityUpdate::areConstitutiveStateVariablesConverged()
+CrystalPlasticityUpdateIrr::areConstitutiveStateVariablesConverged()
 {
   return isConstitutiveStateVariableConverged(_slip_resistance[_qp],
                                               _slip_resistance_before_update,
@@ -281,7 +307,7 @@ CrystalPlasticityUpdate::areConstitutiveStateVariablesConverged()
 }
 
 void
-CrystalPlasticityUpdate::updateSubstepConstitutiveVariableValues()
+CrystalPlasticityUpdateIrr::updateSubstepConstitutiveVariableValues()
 {
   // Would also set substepped dislocation densities here if included in this model
   _previous_substep_slip_resistance = _slip_resistance[_qp];
@@ -290,7 +316,7 @@ CrystalPlasticityUpdate::updateSubstepConstitutiveVariableValues()
 }
 
 void
-CrystalPlasticityUpdate::cacheStateVariablesBeforeUpdate()
+CrystalPlasticityUpdateIrr::cacheStateVariablesBeforeUpdate()
 {
   _slip_resistance_before_update = _slip_resistance[_qp];
   _dislocation_density_before_update = _dislocation_density[_qp];
@@ -298,7 +324,7 @@ CrystalPlasticityUpdate::cacheStateVariablesBeforeUpdate()
 }
 
 void
-CrystalPlasticityUpdate::calculateStateVariableEvolutionRateComponent()
+CrystalPlasticityUpdateIrr::calculateStateVariableEvolutionRateComponent()
 {
     RankTwoTensor N;
     _damage_loop_density_increment = 0.0;
@@ -321,7 +347,7 @@ CrystalPlasticityUpdate::calculateStateVariableEvolutionRateComponent()
 }
 
 bool
-CrystalPlasticityUpdate::updateStateVariables()
+CrystalPlasticityUpdateIrr::updateStateVariables()
 {
     std::vector<Real> slip_resistance_dislocation_component(_number_slip_systems, 0);
     std::vector<Real> slip_resistance_damage_component(_number_slip_systems, 0);

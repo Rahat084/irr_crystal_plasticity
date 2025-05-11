@@ -10,8 +10,10 @@
 #pragma once
 
 #include "CrystalPlasticityStressUpdateBase.h"
+#include "RotationTensor.h"
+#include "PropertyReadFile.h"
 
-class CrystalPlasticityUpdate;
+class CrystalPlasticityUpdateIrr;
 
 /**
  * CrystalPlasticityKalidindiUpdate uses the multiplicative decomposition of the
@@ -21,12 +23,12 @@ class CrystalPlasticityUpdate;
  * Backward Euler integration rule is used for the rate equations.
  */
 
-class CrystalPlasticityUpdate : public CrystalPlasticityStressUpdateBase
+class CrystalPlasticityUpdateIrr : public CrystalPlasticityStressUpdateBase
 {
 public:
   static InputParameters validParams();
 
-  CrystalPlasticityUpdate(const InputParameters & parameters);
+  CrystalPlasticityUpdateIrr(const InputParameters & parameters);
 
 protected:
 /**
@@ -38,6 +40,11 @@ void getDamageSystem();
  */
 
 void initiateDamageLoopDensity();
+
+/**
+ * Compute Quadrature grain Rotation
+ */
+RankTwoTensor computeQpCrysrot();
   /**
    * initializes the stateful properties such as
    * stress, plastic deformation gradient, slip system resistances, etc.
@@ -188,6 +195,8 @@ void initiateDamageLoopDensity();
   MaterialProperty<Real> & _avg_slip_resistance_damage;
   MaterialProperty<std::vector<Real>> & _slip_resistance_damage;
   ///@}
+  ///Element property read user object used to read in Euler angles
+  const PropertyReadFile * const _read_prop_user_object;
 
 
   /**

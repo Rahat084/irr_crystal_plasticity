@@ -3,25 +3,35 @@
 []
 
 [Mesh]
-  [cube]
-    type = GeneratedMeshGenerator
-    dim = 3
-    nx = 2 
-    ny = 2
-    nz = 2
-    elem_type = HEX8
-    xmax = 3E-3
-    xmin = 0
-    ymax = 3E-3
-    ymin = 0 
-    zmax = 3E-3
-    zmin = 0
-
+  [./fmg]
+    type = FileMeshGenerator
+    file = EightGrains.msh
+    allow_renumbering = False
+  []
+  [scale_down]
+    type = TransformGenerator
+    input = fmg
+    transform = SCALE
+    vector_value = '3e-3 3e-3 3e-3'
   []
 []
 
+[UserObjects]
+  [prop_read]
+    type = PropertyReadFile
+    prop_file_name = 'euler_ang_file.txt'
+    use_random_voronoi = false
+    read_type = 'voronoi'
+    nvoronoi = 8 
+    nprop = 3
+  []
+[]
 [AuxVariables]
   [eff_plastic_strain_inc]
+    order = CONSTANT
+    family = MONOMIAL
+  []
+  [gb_eff_plastic_strain_inc]
     order = CONSTANT
     family = MONOMIAL
   []
@@ -34,6 +44,10 @@
     family = MONOMIAL
   []
   [stress_vm]
+    order = CONSTANT
+    family = MONOMIAL
+  []
+  [gb_stress_vm]
     order = CONSTANT
     family = MONOMIAL
   []
@@ -245,10 +259,6 @@
     order = CONSTANT
     family = MONOMIAL
   []
-  [total_plastic_starin]
-    order = CONSTANT
-    family = MONOMIAL
-  []
 []
 
 [Physics/SolidMechanics/QuasiStatic/all]
@@ -259,8 +269,16 @@
 [AuxKernels]
   [eff_plastic_strain_inc]
     type = MaterialRealAux
-    variable = eff_plastic_strain_inc
+    variable = gb_eff_plastic_strain_inc
     property = effective_equivalent_slip_increment
+    execute_on = timestep_end
+  []
+  [gb_eff_plastic_strain_inc]
+    type = MaterialRealAux
+    variable = gb_eff_plastic_strain_inc
+    property = effective_equivalent_slip_increment
+    boundary = 195
+    check_boundary_restricted = false
     execute_on = timestep_end
   []
   [avg_slip_resistance_dislocation_comp]
@@ -280,6 +298,15 @@
     rank_two_tensor = stress
     variable = stress_vm
     scalar_type = VonMisesStress
+    execute_on = timestep_end
+  []
+  [gb_stress_vm]
+    type = RankTwoScalarAux
+    rank_two_tensor = stress
+    variable = gb_stress_vm
+    scalar_type = VonMisesStress
+    boundary = 195
+    check_boundary_restricted = false
     execute_on = timestep_end
   []
   [stress_zz]
@@ -674,6 +701,7 @@
     type = ComputeElasticityTensorCP
     C_ijkl = '2.36e5 1.34e5 1.34e5 2.36e5 1.34e5 2.36e5 1.19e5 1.19e5 1.19e5' # roughly Iron
     fill_method = symmetric9
+    read_prop_user_object = prop_read
   []
   [stress]
     type = ComputeMultipleCrystalPlasticityStress
@@ -686,6 +714,7 @@
     slip_sys_file_name = input_slip_sys_bcc48.txt
     number_possible_damage_plane = 12
     damage_plane_file_name = input_damage_plane.txt
+    read_prop_user_object = prop_read
     #gamma_dot_k0 = 1E6
     #k1 = 450E1
   []
@@ -695,6 +724,15 @@
   [eff_plastic_strain_inc]
     type = ElementAverageValue
     variable = eff_plastic_strain_inc
+  []
+  [gb_eff_plastic_strain_inc_avg]
+    type = ElementAverageValue
+    variable = gb_eff_plastic_strain_inc
+  []
+  [gb_eff_plastic_strain_inc_max]
+    type = ElementExtremeValue
+    variable = gb_eff_plastic_strain_inc
+    value_type = max
   []
   [avg_slip_resistance_dislocation_comp]
     type = ElementAverageValue
@@ -707,6 +745,15 @@
   [stress_vm]
     type = ElementAverageValue
     variable = stress_vm
+  []
+  [gb_stress_vm_avg]
+    type = ElementAverageValue
+    variable = gb_stress_vm
+  []
+  [gb_stress_vm_max]
+    type = ElementExtremeValue
+    variable = gb_stress_vm
+    value_type = max
   []
   [stress_zz]
     type = ElementAverageValue
