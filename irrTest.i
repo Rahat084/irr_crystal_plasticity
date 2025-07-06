@@ -685,7 +685,7 @@
     number_slip_systems = 48
     slip_sys_file_name = input_slip_sys_bcc48.txt
     number_possible_damage_plane = 12
-    damage_plane_file_name = input_damage_plane.txt
+    damage_plane_file_name = input_damage_plane_bcc.txt
     #gamma_dot_k0 = 1E6
     #k1 = 450E1
   []
@@ -936,8 +936,8 @@
   nl_abs_step_tol = 1e-10
 
   dt = 1E-5
-  dtmin = 1E-8
-  num_steps = 50
+  dtmin = 1E-12
+  num_steps = 150
 []
 
 [Outputs]

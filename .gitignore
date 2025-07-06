@@ -338,3 +338,5 @@ share/
 *.hpc_result
 *.hpc_submit
 irr_crystal_plasticity.yaml
+core.*
+joblog.*
