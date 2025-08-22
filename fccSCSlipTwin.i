@@ -20,18 +20,6 @@
 []
 
 [AuxVariables]
-  [eff_plastic_strain_inc]
-    order = CONSTANT
-    family = MONOMIAL
-  []
-  [avg_slip_resistance_dislocation_comp]
-    order = CONSTANT
-    family = MONOMIAL
-  []
-  [avg_slip_resistance_damage_comp]
-    order = CONSTANT
-    family = MONOMIAL
-  []
   [stress_vm]
     order = CONSTANT
     family = MONOMIAL
@@ -89,54 +77,6 @@
     family = MONOMIAL
   []
   [slip_increment_11]
-    order = CONSTANT
-    family = MONOMIAL
-  []
-  [slip_resistance_damage_0]
-    order = CONSTANT
-    family = MONOMIAL
-  []
-  [slip_resistance_damage_1]
-    order = CONSTANT
-    family = MONOMIAL
-  []
-  [slip_resistance_damage_2]
-    order = CONSTANT
-    family = MONOMIAL
-  []
-  [slip_resistance_damage_3]
-    order = CONSTANT
-    family = MONOMIAL
-  []
-  [slip_resistance_damage_4]
-    order = CONSTANT
-    family = MONOMIAL
-  []
-  [slip_resistance_damage_5]
-    order = CONSTANT
-    family = MONOMIAL
-  []
-  [slip_resistance_damage_6]
-    order = CONSTANT
-    family = MONOMIAL
-  []
-  [slip_resistance_damage_7]
-    order = CONSTANT
-    family = MONOMIAL
-  []
-  [slip_resistance_damage_8]
-    order = CONSTANT
-    family = MONOMIAL
-  []
-  [slip_resistance_damage_9]
-    order = CONSTANT
-    family = MONOMIAL
-  []
-  [slip_resistance_damage_10]
-    order = CONSTANT
-    family = MONOMIAL
-  []
-  [slip_resistance_damage_11]
     order = CONSTANT
     family = MONOMIAL
   []
@@ -200,24 +140,6 @@
 []
 
 [AuxKernels]
-  [eff_plastic_strain_inc]
-    type = MaterialRealAux
-    variable = eff_plastic_strain_inc
-    property = effective_equivalent_slip_increment
-    execute_on = timestep_end
-  []
-  [avg_slip_resistance_dislocation_comp]
-    type = MaterialRealAux
-    variable = avg_slip_resistance_dislocation_comp
-    property = avg_slip_resistance_dislocation
-    execute_on = timestep_end
-  []
-  [avg_slip_resistance_damage_comp]
-    type = MaterialRealAux
-    variable = avg_slip_resistance_damage_comp
-    property = avg_slip_resistance_damage
-    execute_on = timestep_end
-  []
   [stress_vm]
     type = RankTwoScalarAux
     rank_two_tensor = stress
@@ -324,89 +246,6 @@
    property = slip_increment
    index = 11
    execute_on = timestep_end
-  []
-  [slip_resistance_damage_0]
-   type = MaterialStdVectorAux
-   variable = slip_resistance_damage_0
-   property = slip_resistance_damage
-   index = 0
-   execute_on = timestep_end
-  []
-  [slip_resistance_damage_1]
-   type = MaterialStdVectorAux
-   variable = slip_resistance_damage_1
-   property = slip_resistance_damage
-   index = 1
-   execute_on = timestep_end
-  []
-  [slip_resistance_damage_2]
-   type = MaterialStdVectorAux
-   variable = slip_resistance_damage_2
-   property = slip_resistance_damage
-   index = 2
-   execute_on = timestep_end
-  []
-  [slip_resistance_damage_3]
-   type = MaterialStdVectorAux
-   variable = slip_resistance_damage_3
-   property = slip_resistance_damage
-   index = 3
-   execute_on = timestep_end
-  []
-  [slip_resistance_damage_4]
-   type = MaterialStdVectorAux
-   variable = slip_resistance_damage_4
-   property = slip_resistance_damage
-   index = 4
-   execute_on = timestep_end
-  []
-  [slip_resistance_damage_5]
-   type = MaterialStdVectorAux
-   variable = slip_resistance_damage_5
-   property = slip_resistance_damage
-   index = 5
-   execute_on = timestep_end
-  []
-  [slip_resistance_damage_6]
-   type = MaterialStdVectorAux
-   variable = slip_resistance_damage_6
-   property = slip_resistance_damage
-   index = 6
-   execute_on = timestep_end
-  []
-  [slip_resistance_damage_7]
-   type = MaterialStdVectorAux
-   variable = slip_resistance_damage_7
-   property = slip_resistance_damage
-   index = 7
-   execute_on = timestep_end
-  []
-  [slip_resistance_damage_8]
-   type = MaterialStdVectorAux
-   variable = slip_resistance_damage_8
-   property = slip_resistance_damage
-   index = 8
-   execute_on = timestep_end
-  []
-  [slip_resistance_damage_9]
-   type = MaterialStdVectorAux
-   variable = slip_resistance_damage_9
-   property = slip_resistance_damage
-   index = 9
-   execute_on = timestep_end
-  []
-  [slip_resistance_damage_10]
-   type = MaterialStdVectorAux
-   variable = slip_resistance_damage_10
-   property = slip_resistance_damage
-   index = 10
-   execute_on = timestep_end
-  []
-  [slip_resistance_damage_11]
-   type = MaterialStdVectorAux
-   variable = slip_resistance_damage_11
-   property = slip_resistance_damage
-   index = 11
   []
   [twin_volume_fraction_0]
    type = MaterialStdVectorAux
@@ -536,43 +375,30 @@
   []
   [stress]
     type = ComputeMultipleCrystalPlasticityStress
-    crystal_plasticity_models = 'twin_xtalpl slip_xtalpl'
+    crystal_plasticity_models = ' twin_xtalpl slip_xtalpl'
     tan_mod_type = exact
   []
   [twin_xtalpl]
-      type = CrystalPlasticityTwinningKalidindiUpdate
-      base_name = twin
-      number_slip_systems = 12
-      slip_sys_file_name = 'fcc_input_twinning_systems.txt'
-      initial_twin_lattice_friction = 470.0
-      coplanar_coefficient_twin_hardening = 2000
-      non_coplanar_coefficient_twin_hardening = 27000
+    type = CrystalPlasticityTwinningUpdateIrr
+    base_name = twin
+    number_slip_systems = 12
+    slip_sys_file_name = 'fcc_input_twinning_systems.txt'
+#    twin_reference_strain_rate = 3E4
+    initial_twin_lattice_friction = 100.0
+    #initial_twin_lattice_friction = 470.0
+    coplanar_coefficient_twin_hardening = 2000
+    non_coplanar_coefficient_twin_hardening = 27000
+    non_coplanar_twin_hardening_exponent = 0.05
   []
   [slip_xtalpl]
-    type = CrystalPlasticityUpdateIrr
+    type = CrystalPlasticityKalidindiSlipTwinUpdate
     number_slip_systems = 12
     slip_sys_file_name = input_slip_sys_fcc12.txt
-    number_possible_damage_plane = 16
-    damage_plane_file_name = input_damage_plane_fcc.txt
     total_twin_volume_fraction = 'twin_total_volume_fraction_twins'
-    mu0 = 80E3
-    g0 = 322
   []
 []
 
 [Postprocessors]
-  [eff_plastic_strain_inc]
-    type = ElementAverageValue
-    variable = eff_plastic_strain_inc
-  []
-  [avg_slip_resistance_dislocation_comp]
-    type = ElementAverageValue
-    variable = avg_slip_resistance_dislocation_comp
-  []
-  [avg_slip_resistance_damage_comp]
-    type = ElementAverageValue
-    variable = avg_slip_resistance_damage_comp
-  []
   [stress_vm]
     type = ElementAverageValue
     variable = stress_vm
@@ -632,54 +458,6 @@
   [slip_increment_11]
     type = ElementAverageValue
     variable = slip_increment_11
-  []
-  [slip_resistance_damage_0]
-    type = ElementAverageValue
-    variable = slip_resistance_damage_0
-  []
-  [slip_resistance_damage_1]
-    type = ElementAverageValue
-    variable = slip_resistance_damage_1
-  []
-  [slip_resistance_damage_2]
-    type = ElementAverageValue
-    variable = slip_resistance_damage_2
-  []
-  [slip_resistance_damage_3]
-    type = ElementAverageValue
-    variable = slip_resistance_damage_3
-  []
-  [slip_resistance_damage_4]
-    type = ElementAverageValue
-    variable = slip_resistance_damage_4
-  []
-  [slip_resistance_damage_5]
-    type = ElementAverageValue
-    variable = slip_resistance_damage_5
-  []
-  [slip_resistance_damage_6]
-    type = ElementAverageValue
-    variable = slip_resistance_damage_6
-  []
-  [slip_resistance_damage_7]
-    type = ElementAverageValue
-    variable = slip_resistance_damage_7
-  []
-  [slip_resistance_damage_8]
-    type = ElementAverageValue
-    variable = slip_resistance_damage_8
-  []
-  [slip_resistance_damage_9]
-    type = ElementAverageValue
-    variable = slip_resistance_damage_9
-  []
-  [slip_resistance_damage_10]
-    type = ElementAverageValue
-    variable = slip_resistance_damage_10
-  []
-  [slip_resistance_damage_11]
-    type = ElementAverageValue
-    variable = slip_resistance_damage_11
   []
   [twin_volume_fraction_0]
     type = ElementAverageValue
@@ -748,13 +526,13 @@
 
   petsc_options_iname = '-pc_type -pc_asm_overlap -sub_pc_type -ksp_type -ksp_gmres_restart'
   petsc_options_value = ' asm      2              lu            gmres     200'
-  nl_abs_tol = 1e-10
-  nl_rel_tol = 1e-10
-  nl_abs_step_tol = 1e-10
+  nl_abs_tol = 1e-5
+  nl_rel_tol = 1e-5
+  nl_abs_step_tol = 1e-5
 
   dt = 1E-5
   dtmin = 1E-8
-  num_steps = 100
+  num_steps = 200
 #  [./Adaptivity]
 #      refine_fraction = 0.3
 #      max_h_level = 7

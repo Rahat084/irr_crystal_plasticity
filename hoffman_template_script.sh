@@ -29,7 +29,7 @@ conda activate moose
 
 ## substitute the command to run your code
 ## in the two lines below:
-mpiexec /u/home/m/mdshasan/projects/irr_crystal_plasticity/irr_crystal_plasticity-opt -i irrPolyTest2.i
+mpiexec /u/home/m/mdshasan/projects/irr_crystal_plasticity/irr_crystal_plasticity-opt -i fccSCSlipTwin.i
 
 ## echo job info on joblog:
 echo "Job $JOB_ID ended on:   " `hostname -s`
