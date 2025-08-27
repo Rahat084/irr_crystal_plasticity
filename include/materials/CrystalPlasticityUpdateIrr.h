@@ -12,6 +12,7 @@
 #include "CrystalPlasticityStressUpdateBase.h"
 #include "RotationTensor.h"
 #include "PropertyReadFile.h"
+#include <random>
 
 class CrystalPlasticityUpdateIrr;
 
@@ -45,10 +46,14 @@ void initiateDamageLoopDensity();
  * Compute Quadrature grain Rotation
  */
 RankTwoTensor computeQpCrysrot();
-  /**
-   * initializes the stateful properties such as
-   * stress, plastic deformation gradient, slip system resistances, etc.
-   */
+/**
+ * Add scotactic inhomogenity to a material property (Weibull Distribution)
+ */
+Real stochasticInhomogenityFactor( std::mt19937 & gen); 
+
+ /**
+ * initializes the stateful properties such as stress, plastic deformation gradient, slip system resistances, etc.
+ */
   virtual void initQpStatefulProperties() override;
 
   /**
@@ -213,4 +218,15 @@ RankTwoTensor computeQpCrysrot();
    * value by a single timestep.
    */
   const MaterialProperty<Real> * const _twin_volume_fraction_total;
+  /**
+   * Flag to include the Weibull distrubution of the inhomogenity of critical resolved stress   
+   * stochastic CRSS calculation, per Liu IJP (2022).
+   */
+  const bool _include_stochastic_inhomogenity;
+  /**
+   * shape parameter of the stochastic distribution
+   * stochastic CRSS calculation, per Liu IJP (2022).
+   */
+  const Real _shape_param;
+ 
 };

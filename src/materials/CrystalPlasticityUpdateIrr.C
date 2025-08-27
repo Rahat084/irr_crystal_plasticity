@@ -54,6 +54,8 @@ CrystalPlasticityUpdateIrr::validParams()
   params.addParam<MaterialPropertyName>(
       "total_twin_volume_fraction",
       "Total twin volume fraction, if twinning is considered in the simulation");
+  params.addParam<bool>("stochastic_inhomogenity", false,  "activation flag for the stochastic distribution");
+  params.addParam<Real>("shape_parameter", 1.0,  "shape parameter of the stochastic distribution");
 
   return params;
 }
@@ -111,7 +113,10 @@ CrystalPlasticityUpdateIrr::CrystalPlasticityUpdateIrr(
     _include_twinning_in_Lp(parameters.isParamValid("total_twin_volume_fraction")),
      _twin_volume_fraction_total(_include_twinning_in_Lp
                                      ? &getMaterialPropertyOld<Real>("total_twin_volume_fraction")
-                                     : nullptr)
+                                     : nullptr),
+     // Stochastic inhomnogenity if used
+    _include_stochastic_inhomogenity(getParam<bool>("stochastic_inhomogenity")),
+    _shape_param(getParam<Real>("shape_parameter"))
  {
 getDamageSystem();
 initiateDamageLoopDensity();
@@ -199,6 +204,14 @@ CrystalPlasticityUpdateIrr::computeQpCrysrot()
     return rotMat.transpose();
 
 }
+Real
+CrystalPlasticityUpdateIrr::stochasticInhomogenityFactor( std::mt19937 & gen) 
+{
+    std::uniform_real_distribution<double> Uniform_dist(0.0, 1.0);
+
+return    std::pow(std::tgamma(1.0 + 1.0/_shape_param), _xm) /std::pow(-std::log(1.0 - Uniform_dist(gen)), _xm/_shape_param);
+}
+
 void
 CrystalPlasticityUpdateIrr::initQpStatefulProperties()
 {
@@ -349,6 +362,13 @@ CrystalPlasticityUpdateIrr::calculateStateVariableEvolutionRateComponent()
 bool
 CrystalPlasticityUpdateIrr::updateStateVariables()
 {
+    /*
+    if (_include_stochastic_inhomogenity)
+    {
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    }
+    */
     std::vector<Real> slip_resistance_dislocation_component(_number_slip_systems, 0);
     std::vector<Real> slip_resistance_damage_component(_number_slip_systems, 0);
     RankTwoTensor N;
@@ -373,6 +393,13 @@ CrystalPlasticityUpdateIrr::updateStateVariables()
 slip_resistance_dislocation_component[i] = _mu0 * _b * (std::sqrt(_hn * _dislocation_density[_qp][i]));
 slip_resistance_damage_component[i] = _mu0 * _b * std::sqrt( _hd * N.doubleContraction( _damage_loop_density[_qp]));
 _slip_resistance[_qp][i] = slip_resistance_dislocation_component[i] + slip_resistance_damage_component[i]; 
+
+    if (_slip_resistance[_qp][i] > 0 && _include_stochastic_inhomogenity) 
+{ 
+    std::random_device rd;
+    std::mt19937 gen(rd());
+_slip_resistance[_qp][i]*= stochasticInhomogenityFactor(gen);
+}
     if (_slip_resistance[_qp][i] < 0.0)
       return false;
   }
@@ -382,3 +409,4 @@ _slip_resistance[_qp][i] = slip_resistance_dislocation_component[i] + slip_resis
 
   return true;
 }
+

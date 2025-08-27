@@ -557,6 +557,8 @@
     total_twin_volume_fraction = 'twin_total_volume_fraction_twins'
     mu0 = 80E3
     g0 = 322
+#    stochastic_inhomogenity = true
+#    shape_parameter = 0.5
   []
 []
 
@@ -753,7 +755,7 @@
   nl_abs_step_tol = 1e-10
 
   dt = 1E-5
-  dtmin = 1E-8
+  dtmin = 1E-12
   num_steps = 100
 #  [./Adaptivity]
 #      refine_fraction = 0.3
