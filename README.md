@@ -20,3 +20,5 @@ Only Slip Based Deformation
 # Twinnning branch
 * Twin component of slip rate 
 * Temprature modulated interpolation
+ 
+mpiexec -n 2 moose-dev-exec ./irr_crystal_plasticity-opt -i irrFCC_poly.i
