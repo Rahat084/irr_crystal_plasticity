@@ -26,6 +26,7 @@
     nprop = 3
   []
 []
+
 [AuxVariables]
   [eff_plastic_strain_inc]
     order = CONSTANT
@@ -713,7 +714,7 @@
     number_slip_systems = 48
     slip_sys_file_name = input_slip_sys_bcc48.txt
     number_possible_damage_plane = 12
-    damage_plane_file_name = input_damage_plane.txt
+    damage_plane_file_name = input_damage_plane_bcc.txt
     read_prop_user_object = prop_read
     #gamma_dot_k0 = 1E6
     #k1 = 450E1
