@@ -23,7 +23,7 @@ CrystalPlasticityUpdateIrr::validParams()
   params.addClassDescription("Kalidindi version of homogeneous crystal plasticity.");
   // Material Parameters
   params.addParam<Real>("b", 2.48E-7,  "burgers vector (mm)");
-  params.addParam<Real>("rho0", 10E6,  "Initial Dislocation Density (mm^-2)");
+  params.addParam<Real>("rho0", 10E6,  "An arbritrary Dislocation Density in specified unit (mm^-2)");
   params.addParam<Real>("mu0", 86E3,  "Shear Modulus (MPa)");
   // Kock-Mecking Parameters
   params.addParam<Real>("k1", 450,  "Dislocation Storage Constant");
@@ -36,6 +36,8 @@ CrystalPlasticityUpdateIrr::validParams()
   params.addParam<Real>("g0", 90,  "Initial Slip Ressistance (MPa)");
   params.addParam<Real>("ao", 3E4,  "Initial Slip Rate ");
   params.addParam<Real>("xm", 0.05,  "Slip Rate Evolution Power Law exponent");
+  params.addParam<Real>("rho_n", 2*10E7,  "Initial dislocation density (mm^-2)");
+  params.addParam<Real>("damage_loop_diameter", 5E-6,  "Average diameter of the damage loop (mm)");
   //Additional Param
   params.addParam<Real>("cell_vol", 27E-9,  "Simulation Cell Volume (mm^3)");
   params.addParam<Real>("rho_l", 1.63E13,  "Irradiation damage loop density (mm^-2)");
@@ -80,7 +82,9 @@ CrystalPlasticityUpdateIrr::CrystalPlasticityUpdateIrr(
     _g0(getParam<Real>("g0")),
     _ao(getParam<Real>("ao")),
     _xm(getParam<Real>("xm")),
+    _rho_n(getParam<Real>("rho_n")),
     //Additional Parameter
+    _damage_loop_diameter(getParam<Real>("damage_loop_diameter")),
     _cell_vol(getParam<Real>("cell_vol")),
     _rho_l(getParam<Real>("rho_l")),
     _dislocation_density_increment(_number_slip_systems, 0.0),
@@ -190,7 +194,8 @@ CrystalPlasticityUpdateIrr::initiateDamageLoopDensity()
 	H(j, k) +=  (Identity(j, k) - local_loop_normal[j] * local_loop_normal[k]);
     }
 }
-	_damage_loop_density_initial =  (3 * 100 * _b * H)/_cell_vol;
+	//_damage_loop_density_initial =  (3 * 100 * _b * H)/_cell_vol;
+	_damage_loop_density_initial =  (3 * _damage_loop_diameter * H)/_cell_vol;
 	}
 RankTwoTensor 
 CrystalPlasticityUpdateIrr::computeQpCrysrot()
@@ -222,7 +227,7 @@ CrystalPlasticityUpdateIrr::initQpStatefulProperties()
   {
     _slip_resistance[_qp][i] = _g0;
     _slip_increment[_qp][i] = 0.0;
-   _dislocation_density[_qp][i] = _rho0;
+   _dislocation_density[_qp][i] = _rho_n;
   }
   if (_read_prop_user_object)
   {

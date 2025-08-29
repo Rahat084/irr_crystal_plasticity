@@ -144,6 +144,8 @@ Real stochasticInhomogenityFactor( std::mt19937 & gen);
   const Real _g0;
   const Real _ao;
   const Real _xm;
+  const Real _rho_n;
+  const Real _damage_loop_diameter;
   const Real _cell_vol;
   const Real _rho_l;
   ///
