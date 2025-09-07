@@ -1,11 +1,12 @@
-#! /bin bash 
+#!/bin bash 
 
 # PBS -N irr_crystal_plasticity
 # PBS -M mdshasan@ucla.edu
-# PBS -l walltime=168:00:00
-# PBS -l select=4:ncpus=112:mpiprocs=112
+# PBS -l select=1
+# PBS -l place=excl
+# PBS -l walltime=2:00:00
 # PBS -P ncrc
-# PBS -q general
+# PBS -q debug
 # PBS -j oe
 
 # LOAD MODULES, INSERT CODE, AND RUN YOUR PROGRAMS HERE

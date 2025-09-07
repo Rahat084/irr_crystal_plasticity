@@ -6,9 +6,9 @@
   [cube]
     type = GeneratedMeshGenerator
     dim = 3
-    nx = 2
-    ny = 2
-    nz = 2
+    nx = 40
+    ny = 40
+    nz = 40
     elem_type = HEX8
     xmax = 3E-3
     xmin = 0

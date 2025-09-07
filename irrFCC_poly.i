@@ -836,8 +836,8 @@
 
   dt = 1E-5
   dtmin = 1E-25
-  #num_steps = 100
-  end_time = 5e-3
+  num_steps = 100
+#  end_time = 5e-3
 #  [./Adaptivity]
 #      refine_fraction = 0.3
 #      max_h_level = 7
