@@ -3,6 +3,7 @@
 []
 
 [Mesh]
+construct_side_list_from_node_list = false
   [./fmg]
     type = FileMeshGenerator
     file = three_grain_poly.msh
@@ -25,10 +26,10 @@
 [UserObjects]
   [prop_read]
     type = PropertyReadFile
-    prop_file_name = 'euler_ang_six_grain.txt'
-    #use_random_voronoi = false
+    prop_file_name = 'euler_ang_three_grain.txt'
     read_type = 'block'
-    nblock = 6
+    #use_random_voronoi = false
+    nblock = 3 
     nprop = 3
   []
 []
@@ -158,58 +159,58 @@
     order = CONSTANT
     family = MONOMIAL
   []
-  [twin_volume_fraction_0]
-   order = CONSTANT
-   family = MONOMIAL
-  []
-  [twin_volume_fraction_1]
-   order = CONSTANT
-   family = MONOMIAL
-  []
-  [twin_volume_fraction_2]
-   order = CONSTANT
-   family = MONOMIAL
-  []
-  [twin_volume_fraction_3]
-   order = CONSTANT
-   family = MONOMIAL
-  []
-  [twin_volume_fraction_4]
-   order = CONSTANT
-   family = MONOMIAL
-  []
-  [twin_volume_fraction_5]
-   order = CONSTANT
-   family = MONOMIAL
-  []
-  [twin_volume_fraction_6]
-   order = CONSTANT
-   family = MONOMIAL
-  []
-  [twin_volume_fraction_7]
-   order = CONSTANT
-   family = MONOMIAL
-  []
-  [twin_volume_fraction_8]
-   order = CONSTANT
-   family = MONOMIAL
-  []
-  [twin_volume_fraction_9]
-   order = CONSTANT
-   family = MONOMIAL
-  []
-  [twin_volume_fraction_10]
-   order = CONSTANT
-   family = MONOMIAL
-  []
-  [twin_volume_fraction_11]
-   order = CONSTANT
-   family = MONOMIAL
-  []
-  [total_twin_volume_fraction]
-    order = CONSTANT
-    family = MONOMIAL
-  []
+# [twin_volume_fraction_0]
+#  order = CONSTANT
+#  family = MONOMIAL
+# []
+# [twin_volume_fraction_1]
+#  order = CONSTANT
+#  family = MONOMIAL
+# []
+# [twin_volume_fraction_2]
+#  order = CONSTANT
+#  family = MONOMIAL
+# []
+# [twin_volume_fraction_3]
+#  order = CONSTANT
+#  family = MONOMIAL
+# []
+# [twin_volume_fraction_4]
+#  order = CONSTANT
+#  family = MONOMIAL
+# []
+# [twin_volume_fraction_5]
+#  order = CONSTANT
+#  family = MONOMIAL
+# []
+# [twin_volume_fraction_6]
+#  order = CONSTANT
+#  family = MONOMIAL
+# []
+# [twin_volume_fraction_7]
+#  order = CONSTANT
+#  family = MONOMIAL
+# []
+# [twin_volume_fraction_8]
+#  order = CONSTANT
+#  family = MONOMIAL
+# []
+# [twin_volume_fraction_9]
+#  order = CONSTANT
+#  family = MONOMIAL
+# []
+# [twin_volume_fraction_10]
+#  order = CONSTANT
+#  family = MONOMIAL
+# []
+# [twin_volume_fraction_11]
+#  order = CONSTANT
+#  family = MONOMIAL
+# []
+# [total_twin_volume_fraction]
+#   order = CONSTANT
+#   family = MONOMIAL
+# []
   [euler_angle_1]
       order = CONSTANT
       family = MONOMIAL
@@ -447,96 +448,96 @@
    property = slip_resistance_damage
    index = 11
   []
-  [twin_volume_fraction_0]
-   type = MaterialStdVectorAux
-   variable = twin_volume_fraction_0
-   property = twin_twin_system_volume_fraction
-   index = 0
-   execute_on = timestep_end
-  []
-  [twin_volume_fraction_1]
-   type = MaterialStdVectorAux
-   variable = twin_volume_fraction_1
-   property = twin_twin_system_volume_fraction
-   index = 1
-   execute_on = timestep_end
-  []
-  [twin_volume_fraction_2]
-   type = MaterialStdVectorAux
-   variable = twin_volume_fraction_2
-   property = twin_twin_system_volume_fraction
-   index = 2
-   execute_on = timestep_end
-  []
-  [twin_volume_fraction_3]
-   type = MaterialStdVectorAux
-   variable = twin_volume_fraction_3
-   property = twin_twin_system_volume_fraction
-   index = 3
-   execute_on = timestep_end
-  []
-  [twin_volume_fraction_4]
-   type = MaterialStdVectorAux
-   variable = twin_volume_fraction_4
-   property = twin_twin_system_volume_fraction
-   index = 4
-   execute_on = timestep_end
-  []
-  [twin_volume_fraction_5]
-   type = MaterialStdVectorAux
-   variable = twin_volume_fraction_5
-   property = twin_twin_system_volume_fraction
-   index = 5
-   execute_on = timestep_end
-  []
-  [twin_volume_fraction_6]
-   type = MaterialStdVectorAux
-   variable = twin_volume_fraction_6
-   property = twin_twin_system_volume_fraction
-   index = 6
-   execute_on = timestep_end
-  []
-  [twin_volume_fraction_7]
-   type = MaterialStdVectorAux
-   variable = twin_volume_fraction_7
-   property = twin_twin_system_volume_fraction
-   index = 7
-   execute_on = timestep_end
-  []
-  [twin_volume_fraction_8]
-   type = MaterialStdVectorAux
-   variable = twin_volume_fraction_8
-   property = twin_twin_system_volume_fraction
-   index = 8
-   execute_on = timestep_end
-  []
-  [twin_volume_fraction_9]
-   type = MaterialStdVectorAux
-   variable = twin_volume_fraction_9
-   property = twin_twin_system_volume_fraction
-   index = 9
-   execute_on = timestep_end
-  []
-  [twin_volume_fraction_10]
-   type = MaterialStdVectorAux
-   variable = twin_volume_fraction_10
-   property = twin_twin_system_volume_fraction
-   index = 10
-   execute_on = timestep_end
-  []
-  [twin_volume_fraction_11]
-   type = MaterialStdVectorAux
-   variable = twin_volume_fraction_11
-   property = twin_twin_system_volume_fraction
-   index = 11
-   execute_on = timestep_end
-  []
-  [total_twin_volume_fraction]
-    type = MaterialRealAux
-    variable = total_twin_volume_fraction
-    property = twin_total_volume_fraction_twins
-    execute_on = timestep_end
-  []
+# [twin_volume_fraction_0]
+#  type = MaterialStdVectorAux
+#  variable = twin_volume_fraction_0
+#  property = twin_twin_system_volume_fraction
+#  index = 0
+#  execute_on = timestep_end
+# []
+# [twin_volume_fraction_1]
+#  type = MaterialStdVectorAux
+#  variable = twin_volume_fraction_1
+#  property = twin_twin_system_volume_fraction
+#  index = 1
+#  execute_on = timestep_end
+# []
+# [twin_volume_fraction_2]
+#  type = MaterialStdVectorAux
+#  variable = twin_volume_fraction_2
+#  property = twin_twin_system_volume_fraction
+#  index = 2
+#  execute_on = timestep_end
+# []
+# [twin_volume_fraction_3]
+#  type = MaterialStdVectorAux
+#  variable = twin_volume_fraction_3
+#  property = twin_twin_system_volume_fraction
+#  index = 3
+#  execute_on = timestep_end
+# []
+# [twin_volume_fraction_4]
+#  type = MaterialStdVectorAux
+#  variable = twin_volume_fraction_4
+#  property = twin_twin_system_volume_fraction
+#  index = 4
+#  execute_on = timestep_end
+# []
+# [twin_volume_fraction_5]
+#  type = MaterialStdVectorAux
+#  variable = twin_volume_fraction_5
+#  property = twin_twin_system_volume_fraction
+#  index = 5
+#  execute_on = timestep_end
+# []
+# [twin_volume_fraction_6]
+#  type = MaterialStdVectorAux
+#  variable = twin_volume_fraction_6
+#  property = twin_twin_system_volume_fraction
+#  index = 6
+#  execute_on = timestep_end
+# []
+# [twin_volume_fraction_7]
+#  type = MaterialStdVectorAux
+#  variable = twin_volume_fraction_7
+#  property = twin_twin_system_volume_fraction
+#  index = 7
+#  execute_on = timestep_end
+# []
+# [twin_volume_fraction_8]
+#  type = MaterialStdVectorAux
+#  variable = twin_volume_fraction_8
+#  property = twin_twin_system_volume_fraction
+#  index = 8
+#  execute_on = timestep_end
+# []
+# [twin_volume_fraction_9]
+#  type = MaterialStdVectorAux
+#  variable = twin_volume_fraction_9
+#  property = twin_twin_system_volume_fraction
+#  index = 9
+#  execute_on = timestep_end
+# []
+# [twin_volume_fraction_10]
+#  type = MaterialStdVectorAux
+#  variable = twin_volume_fraction_10
+#  property = twin_twin_system_volume_fraction
+#  index = 10
+#  execute_on = timestep_end
+# []
+# [twin_volume_fraction_11]
+#  type = MaterialStdVectorAux
+#  variable = twin_volume_fraction_11
+#  property = twin_twin_system_volume_fraction
+#  index = 11
+#  execute_on = timestep_end
+# []
+# [total_twin_volume_fraction]
+#   type = MaterialRealAux
+#   variable = total_twin_volume_fraction
+#   property = twin_total_volume_fraction_twins
+#   execute_on = timestep_end
+# []
   [euler_angle_1]
     type = MaterialRealVectorValueAux
     variable = euler_angle_1
@@ -597,18 +598,18 @@
   []
   [stress]
     type = ComputeMultipleCrystalPlasticityStress
-    crystal_plasticity_models = 'twin_xtalpl slip_xtalpl'
+    crystal_plasticity_models = 'slip_xtalpl'
     tan_mod_type = exact
   []
-  [twin_xtalpl]
-      type = CrystalPlasticityTwinningUpdateIrr
-      base_name = twin
-      number_slip_systems = 12
-      slip_sys_file_name = 'fcc_input_twinning_systems.txt'
-      initial_twin_lattice_friction = 470.0
-      coplanar_coefficient_twin_hardening = 2000
-      non_coplanar_coefficient_twin_hardening = 27000
-  []
+# [twin_xtalpl]
+#     type = CrystalPlasticityTwinningUpdateIrr
+#     base_name = twin
+#     number_slip_systems = 12
+#     slip_sys_file_name = 'fcc_input_twinning_systems.txt'
+#     initial_twin_lattice_friction = 470.0
+#     coplanar_coefficient_twin_hardening = 2000
+#     non_coplanar_coefficient_twin_hardening = 27000
+# []
   [slip_xtalpl]
     type = CrystalPlasticityUpdateIrr
     number_slip_systems = 12
@@ -616,7 +617,7 @@
     number_possible_damage_plane = 16
     damage_plane_file_name = input_damage_plane_fcc.txt
     read_prop_user_object = prop_read
-    total_twin_volume_fraction = 'twin_total_volume_fraction_twins'
+#    total_twin_volume_fraction = 'twin_total_volume_fraction_twins'
     mu0 = 80E3
     g0 = 322
 #    stochastic_inhomogenity = true
@@ -757,58 +758,58 @@
     type = ElementAverageValue
     variable = slip_resistance_damage_11
   []
-  [twin_volume_fraction_0]
-    type = ElementAverageValue
-    variable = twin_volume_fraction_0
-  []
-  [twin_volume_fraction_1]
-    type = ElementAverageValue
-    variable = twin_volume_fraction_1
-  []
-  [twin_volume_fraction_2]
-    type = ElementAverageValue
-    variable = twin_volume_fraction_2
-  []
-  [twin_volume_fraction_3]
-    type = ElementAverageValue
-    variable = twin_volume_fraction_3
-  []
-  [twin_volume_fraction_4]
-    type = ElementAverageValue
-    variable = twin_volume_fraction_4
-  []
-  [twin_volume_fraction_5]
-    type = ElementAverageValue
-    variable = twin_volume_fraction_5
-  []
-  [twin_volume_fraction_6]
-    type = ElementAverageValue
-    variable = twin_volume_fraction_6
-  []
-  [twin_volume_fraction_7]
-    type = ElementAverageValue
-    variable = twin_volume_fraction_7
-  []
-  [twin_volume_fraction_8]
-    type = ElementAverageValue
-    variable = twin_volume_fraction_8
-  []
-  [twin_volume_fraction_9]
-    type = ElementAverageValue
-    variable = twin_volume_fraction_9
-  []
-  [twin_volume_fraction_10]
-    type = ElementAverageValue
-    variable = twin_volume_fraction_10
-  []
-  [twin_volume_fraction_11]
-    type = ElementAverageValue
-    variable = twin_volume_fraction_11
-  []
-  [total_twin_volume_fraction]
-    type = ElementAverageValue
-    variable = total_twin_volume_fraction
-  []
+# [twin_volume_fraction_0]
+#   type = ElementAverageValue
+#   variable = twin_volume_fraction_0
+# []
+# [twin_volume_fraction_1]
+#   type = ElementAverageValue
+#   variable = twin_volume_fraction_1
+# []
+# [twin_volume_fraction_2]
+#   type = ElementAverageValue
+#   variable = twin_volume_fraction_2
+# []
+# [twin_volume_fraction_3]
+#   type = ElementAverageValue
+#   variable = twin_volume_fraction_3
+# []
+# [twin_volume_fraction_4]
+#   type = ElementAverageValue
+#   variable = twin_volume_fraction_4
+# []
+# [twin_volume_fraction_5]
+#   type = ElementAverageValue
+#   variable = twin_volume_fraction_5
+# []
+# [twin_volume_fraction_6]
+#   type = ElementAverageValue
+#   variable = twin_volume_fraction_6
+# []
+# [twin_volume_fraction_7]
+#   type = ElementAverageValue
+#   variable = twin_volume_fraction_7
+# []
+# [twin_volume_fraction_8]
+#   type = ElementAverageValue
+#   variable = twin_volume_fraction_8
+# []
+# [twin_volume_fraction_9]
+#   type = ElementAverageValue
+#   variable = twin_volume_fraction_9
+# []
+# [twin_volume_fraction_10]
+#   type = ElementAverageValue
+#   variable = twin_volume_fraction_10
+# []
+# [twin_volume_fraction_11]
+#   type = ElementAverageValue
+#   variable = twin_volume_fraction_11
+# []
+# [total_twin_volume_fraction]
+#   type = ElementAverageValue
+#   variable = total_twin_volume_fraction
+# []
   [euler_angle_1]
     type = ElementAverageValue
     variable = euler_angle_1
@@ -836,9 +837,9 @@
 
   petsc_options_iname = '-pc_type -pc_asm_overlap -sub_pc_type -ksp_type -ksp_gmres_restart'
   petsc_options_value = ' asm      2              lu            gmres     200'
-  nl_abs_tol = 1e-10
-  nl_rel_tol = 1e-10
-  nl_abs_step_tol = 1e-10
+  nl_abs_tol = 1e-5
+  nl_rel_tol = 1e-5
+  nl_abs_step_tol = 1e-5
 
   dt = 1E-5
   dtmin = 1E-25

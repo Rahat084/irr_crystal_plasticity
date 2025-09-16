@@ -16,13 +16,19 @@
   []
 []
 
+[MeshDivisions]
+  [block_div]
+    type = SubdomainsDivision
+  []
+[]
+
 [UserObjects]
   [prop_read]
     type = PropertyReadFile
-    prop_file_name = 'euler_ang_file.txt'
+    prop_file_name = 'euler_ang_three_grain.txt'
     use_random_voronoi = false
     read_type = 'voronoi'
-    nvoronoi = 8 
+    nvoronoi = 3
     nprop = 3
   []
 []
@@ -1197,19 +1203,19 @@
 []
 
 [BCs]
-#  [fix_y]
-#    type = DirichletBC
-#    variable = disp_y
-#    preset = true
-#    boundary = 'bottom'
-#    value = 0
-#  []
-#  [fix_x]
-#    type = DirichletBC
-#    variable = disp_x
-#    boundary = 'left'
-#    value = 0
-#  []
+  [fix_y]
+    type = DirichletBC
+    variable = disp_y
+    preset = true
+    boundary = 'bottom'
+    value = 0
+  []
+  [fix_x]
+    type = DirichletBC
+    variable = disp_x
+    boundary = 'left'
+    value = 0
+  []
   [fix_z]
     type = DirichletBC
     variable = disp_z

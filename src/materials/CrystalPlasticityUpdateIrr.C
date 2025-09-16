@@ -206,7 +206,7 @@ CrystalPlasticityUpdateIrr::computeQpCrysrot()
     Euler_angles(2) = _read_prop_user_object->getData(_current_elem, 2);
 
     RotationTensor rotMat(Euler_angles);
-    return rotMat.transpose();
+    return rotMat;
 
 }
 Real
