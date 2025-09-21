@@ -171,27 +171,31 @@ CrystalPlasticityUpdateIrr::initiateDamageLoopDensity()
 
     std::random_device rd;
     std::mt19937 gen(rd());
-    std::uniform_int_distribution<> distrib(0, _number_possible_damage_plane);
+    std::uniform_int_distribution<> distrib(0, _number_possible_damage_plane - 1);
 
 	RankTwoTensor H; 
 	RankTwoTensor Identity = RankTwoTensor::Identity();
 	//For now single crystal
+	/*
 	RankTwoTensor crysrot = RankTwoTensor::Identity();
 	std::vector<Real> local_loop_normal;
+	*/
 
     for (const auto i : make_range(_number_damage_loops))
     {
 	unsigned int randint =  distrib(gen);
+	/*
 	local_loop_normal.assign(3, 0); //= 0.0;
 	for (const auto j : make_range(LIBMESH_DIM))
 	  for (const auto k : make_range(LIBMESH_DIM))
 	  {
 	local_loop_normal[j] +=  crysrot(j, k) * _damage_plane_normal[randint](k);
 	  }
+	  */
 	for (const auto j : make_range(LIBMESH_DIM))
 	  for (const auto k : make_range(LIBMESH_DIM))
 	  {
-	H(j, k) +=  (Identity(j, k) - local_loop_normal[j] * local_loop_normal[k]);
+	H(j, k) +=  (Identity(j, k) - _damage_plane_normal[randint](j) * _damage_plane_normal[randint](k));
     }
 }
 	//_damage_loop_density_initial =  (3 * 100 * _b * H)/_cell_vol;
