@@ -329,7 +329,8 @@ CrystalPlasticityTwinningUpdateIrr::calculateTwinResistance()
         if (_slip_increment[_qp][j] > 0.0)
           twin_hardening_increment(i) += _coplanar_coefficient_twin_hardening *
                                          _total_twin_volume_fraction[_qp] *
-                                         _twin_volume_fraction[_qp][j];
+                            //             _twin_volume_fraction[_qp][j];
+                                         _twin_volume_fraction_increment[_qp][j];
       }
       else // assume non-coplanar
       {
@@ -337,7 +338,8 @@ CrystalPlasticityTwinningUpdateIrr::calculateTwinResistance()
           twin_hardening_increment(i) +=
               _non_coplanar_coefficient_twin_hardening *
               std::pow(_total_twin_volume_fraction[_qp], _noncoplanar_exponent) *
-              _twin_volume_fraction[_qp][j];
+        //      _twin_volume_fraction[_qp][j];
+              _twin_volume_fraction_increment[_qp][j];
       }
     }
   }

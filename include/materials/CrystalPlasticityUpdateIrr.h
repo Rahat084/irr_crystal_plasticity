@@ -47,6 +47,14 @@ void initiateDamageLoopDensity();
  */
 RankTwoTensor computeQpCrysrot();
 /**
+ * Caclculate Slip Plane Normal Materxi
+ **/
+  void calculateSlipNormalTensor(const unsigned int & number_dislocation_systems,
+                             const std::vector<RealVectorValue> & plane_normal_vector,
+                             const std::vector<RealVectorValue> & direction_vector,
+                             std::vector<RankTwoTensor> & N,
+                             const RankTwoTensor & crysrot);
+/**
  * Add scotactic inhomogenity to a material property (Weibull Distribution)
  */
 Real stochasticInhomogenityFactor( std::mt19937 & gen); 
@@ -201,6 +209,11 @@ Real stochasticInhomogenityFactor( std::mt19937 & gen);
   MaterialProperty<Real> & _avg_slip_resistance_dislocation;
   MaterialProperty<Real> & _avg_slip_resistance_damage;
   MaterialProperty<std::vector<Real>> & _slip_resistance_damage;
+  /**
+   * Crystal rotation in the original, or reference, configuration as defined by
+   * Euler angle arguments in the ComputeElasticityTensor classes
+   */
+  const MaterialProperty<RankTwoTensor> & _crysrot;
   ///@}
   ///Element property read user object used to read in Euler angles
   const PropertyReadFile * const _read_prop_user_object;

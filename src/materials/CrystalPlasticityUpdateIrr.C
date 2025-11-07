@@ -110,6 +110,8 @@ CrystalPlasticityUpdateIrr::CrystalPlasticityUpdateIrr(
     _avg_slip_resistance_dislocation(declareProperty<Real>(_base_name + "avg_slip_resistance_dislocation")),
     _avg_slip_resistance_damage(declareProperty<Real>(_base_name + "avg_slip_resistance_damage")),
     _slip_resistance_damage(declareProperty<std::vector<Real>>(_base_name + "slip_resistance_damage")),
+    _crysrot(getMaterialProperty<RankTwoTensor>(
+        _base_name + "crysrot")), // defined in the elasticity tensor classes for crystal plasticity
     _read_prop_user_object(isParamValid("read_prop_user_object")
                                ? &getUserObject<PropertyReadFile>("read_prop_user_object")
                                : nullptr),
@@ -171,7 +173,7 @@ CrystalPlasticityUpdateIrr::initiateDamageLoopDensity()
 
     std::random_device rd;
     std::mt19937 gen(rd());
-    std::uniform_int_distribution<> distrib(0, _number_possible_damage_plane);
+    std::uniform_int_distribution<> distrib(0, _number_possible_damage_plane - 1);
 
 	RankTwoTensor H; 
 	RankTwoTensor Identity = RankTwoTensor::Identity();
@@ -222,6 +224,7 @@ CrystalPlasticityUpdateIrr::initQpStatefulProperties()
 {
    RankTwoTensor crysrot; 
   CrystalPlasticityStressUpdateBase::initQpStatefulProperties();
+  //CrystalPlasticityStressUpdateBase::getSlipSystems();
    _dislocation_density[_qp].resize(_number_slip_systems);
   for (const auto i : make_range(_number_slip_systems))
   {
@@ -230,13 +233,12 @@ CrystalPlasticityUpdateIrr::initQpStatefulProperties()
    _dislocation_density[_qp][i] = _rho_n;
   }
   if (_read_prop_user_object)
-  {
    crysrot = computeQpCrysrot();
+   else
+   crysrot = RankTwoTensor::Identity();
+   
   _damage_loop_density[_qp] = _damage_loop_density_initial;
   _damage_loop_density[_qp].rotate( crysrot); 
-  }
-  else
-  _damage_loop_density[_qp] = _damage_loop_density_initial; 
 }
 
 
@@ -344,7 +346,7 @@ CrystalPlasticityUpdateIrr::cacheStateVariablesBeforeUpdate()
 void
 CrystalPlasticityUpdateIrr::calculateStateVariableEvolutionRateComponent()
 {
-    RankTwoTensor N;
+    RankTwoTensor N = RankTwoTensor::Identity();
     _damage_loop_density_increment = 0.0;
   for (const auto i : make_range(_number_slip_systems))
   {
@@ -359,7 +361,9 @@ CrystalPlasticityUpdateIrr::calculateStateVariableEvolutionRateComponent()
   {
       N(j, k) = _slip_plane_normal[i](j) * _slip_plane_normal[i](k);
   }
+    N.rotate(_crysrot[_qp]);
     _damage_loop_density_increment += -_eta * N.doubleContraction(_damage_loop_density[_qp]) * N * std::abs(_slip_increment[_qp][i]);
+    N.zero();
 
 }
 }
@@ -376,7 +380,7 @@ CrystalPlasticityUpdateIrr::updateStateVariables()
     */
     std::vector<Real> slip_resistance_dislocation_component(_number_slip_systems, 0);
     std::vector<Real> slip_resistance_damage_component(_number_slip_systems, 0);
-    RankTwoTensor N;
+    RankTwoTensor N = RankTwoTensor::Identity();
   // Now perform the check to see if the slip system should be updated
   _damage_loop_density_increment *= _substep_dt;
   _damage_loop_density[_qp] = _previous_substep_damage_loop_density + _damage_loop_density_increment;
@@ -392,8 +396,9 @@ CrystalPlasticityUpdateIrr::updateStateVariables()
   for (const auto j : make_range(LIBMESH_DIM))
   for (const auto k : make_range(LIBMESH_DIM))
   {
-      N(j, k) = _slip_plane_normal[i](j) * _slip_plane_normal[i](k);
+      N(j, k) = _slip_.transpose()plane_normal[i](j) * _slip_plane_normal[i](k);
   }
+  N.rotate(_crysrot[_qp]);
 //_slip_resistance[_qp][i] = _mu0 * _b * (std::sqrt(_hn * _dislocation_density[_qp][i]) + std::sqrt( _hd * N.doubleContraction( _damage_loop_density[_qp])));  
 slip_resistance_dislocation_component[i] = _mu0 * _b * (std::sqrt(_hn * _dislocation_density[_qp][i]));
 slip_resistance_damage_component[i] = _mu0 * _b * std::sqrt( _hd * N.doubleContraction( _damage_loop_density[_qp]));
@@ -407,6 +412,7 @@ _slip_resistance[_qp][i]*= stochasticInhomogenityFactor(gen);
 }
     if (_slip_resistance[_qp][i] < 0.0)
       return false;
+  N.zero();
   }
   _avg_slip_resistance_dislocation[_qp] = std::accumulate(slip_resistance_dislocation_component.begin(), slip_resistance_dislocation_component.end(),0.0)/_number_slip_systems;
   _avg_slip_resistance_damage[_qp] = std::accumulate(slip_resistance_damage_component.begin(), slip_resistance_damage_component.end(), 0.0)/_number_slip_systems;
