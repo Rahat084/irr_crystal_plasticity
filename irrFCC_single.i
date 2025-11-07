@@ -32,6 +32,10 @@
     order = CONSTANT
     family = MONOMIAL
   []
+  [stress_hydro]
+    order = CONSTANT
+    family = MONOMIAL
+  []
   [stress_vm]
     order = CONSTANT
     family = MONOMIAL
@@ -216,6 +220,13 @@
     type = MaterialRealAux
     variable = avg_slip_resistance_damage_comp
     property = avg_slip_resistance_damage
+    execute_on = timestep_end
+  []
+  [stress_hydro]
+    type = RankTwoScalarAux
+    rank_two_tensor = stress
+    variable = stress_hydro
+    scalar_type = Hydrostatic
     execute_on = timestep_end
   []
   [stress_vm]
@@ -544,19 +555,35 @@
       base_name = twin
       number_slip_systems = 12
       slip_sys_file_name = 'fcc_input_twinning_systems.txt'
-      initial_twin_lattice_friction = 470.0
+      initial_twin_lattice_friction = 100.0
       coplanar_coefficient_twin_hardening = 2000
       non_coplanar_coefficient_twin_hardening = 27000
+      non_coplanar_twin_hardening_exponent = 0.05
+      upper_limit_twin_volume_fraction = 0.15
   []
   [slip_xtalpl]
     type = CrystalPlasticityUpdateIrr
     number_slip_systems = 12
     slip_sys_file_name = input_slip_sys_fcc12.txt
+    total_twin_volume_fraction = 'twin_total_volume_fraction_twins'
+    mu0 = 80E3 # shear modulus in GPa
+    g0 = 90 # CRSS MPa
+    ao = 3E4 # initial slip rate
+    # Disloction Hardening Params
+    rho0 = 10E6 # An arbritary dislocation density
+    rho_n = 10E6 # Initial dislocation density
+    k1 = 450E2 # Kock-Mecking Storage Parameters
+    k20 = 14 # Kock-Mecking Anhiliation Parameters
+    gamma_dot_k0 = 3E4 # Reference Strain Rate
+    # Irradiation Hardening Params
     number_possible_damage_plane = 16
     damage_plane_file_name = input_damage_plane_fcc.txt
-    total_twin_volume_fraction = 'twin_total_volume_fraction_twins'
-    mu0 = 80E3
-    g0 = 322
+    damage_loop_diameter = 8E-6 # 8 nm diameter
+    rho_l = 3E13 # irradiation damage loop density
+    eta = 66.6 # Anahiliation Efficiency
+    hn = 0.125
+    hd = 0.625
+    xm = 0.05
 #    stochastic_inhomogenity = true
 #    shape_parameter = 0.5
   []

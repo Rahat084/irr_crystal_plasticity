@@ -5,7 +5,7 @@
 [Mesh]
   [./fmg]
     type = FileMeshGenerator
-    file = three_grain_poly.msh
+    file = six_grain_poly.msh
     allow_renumbering = False
   []
   [scale_down]
@@ -46,11 +46,11 @@
     order = CONSTANT
     family = MONOMIAL
   []
-  [stress_vm]
+  [stress_hydro]
     order = CONSTANT
     family = MONOMIAL
   []
-  [gb_stress_vm]
+  [stress_vm]
     order = CONSTANT
     family = MONOMIAL
   []
@@ -248,6 +248,13 @@
     property = avg_slip_resistance_damage
     execute_on = timestep_end
   []
+  [stress_hydro]
+    type = RankTwoScalarAux
+    rank_two_tensor = stress
+    variable = stress_hydro
+    scalar_type = Hydrostatic
+    execute_on = timestep_end
+  []
   [stress_vm]
     type = RankTwoScalarAux
     rank_two_tensor = stress
@@ -261,15 +268,6 @@
     rank_two_tensor = stress
     index_j = 2
     index_i = 2
-    execute_on = timestep_end
-  []
-  [gb_stress_vm]
-    type = RankTwoScalarAux
-    rank_two_tensor = stress
-    variable = gb_stress_vm
-    scalar_type = VonMisesStress
-    boundary = 7
-    check_boundary_restricted = false
     execute_on = timestep_end
   []
   [fp_zz]
@@ -605,20 +603,37 @@
       base_name = twin
       number_slip_systems = 12
       slip_sys_file_name = 'fcc_input_twinning_systems.txt'
-      initial_twin_lattice_friction = 470.0
-      coplanar_coefficient_twin_hardening = 2000
+      initial_twin_lattice_friction = 100.0
+      coplanar_coefficient_twin_hardening = 20000
       non_coplanar_coefficient_twin_hardening = 27000
+      non_coplanar_twin_hardening_exponent = 0.05
+      upper_limit_twin_volume_fraction = 0.15
   []
   [slip_xtalpl]
     type = CrystalPlasticityUpdateIrr
     number_slip_systems = 12
     slip_sys_file_name = input_slip_sys_fcc12.txt
-    number_possible_damage_plane = 16
-    damage_plane_file_name = input_damage_plane_fcc.txt
     read_prop_user_object = prop_read
     total_twin_volume_fraction = 'twin_total_volume_fraction_twins'
-    mu0 = 80E3
-    g0 = 322
+    mu0 = 80E3 # shear modulus in GPa
+    g0 = 90 # CRSS MPa
+    ao = 3E4 # initial slip rate
+    # Disloction Hardening Params
+    rho0 = 10E6 # An arbritary dislocation density
+    rho_n = 10E6 # Initial dislocation density
+    k1 = 450E2 # Kock-Mecking Storage Parameters
+    k20 = 14 # Kock-Mecking Anhiliation Parameters
+    gamma_dot_k0 = 3E4 # Reference Strain Rate
+    # Irradiation Hardening Params
+    number_possible_damage_plane = 16
+    damage_plane_file_name = input_damage_plane_fcc.txt
+    damage_loop_diameter = 8E-6 # 8 nm diameter
+    rho_l = 3E13 # irradiation damage loop density
+    eta = 66.6 # Anahiliation Efficiency
+    hn = 0.125
+    hd = 0.625
+    xm = 0.05
+    #Stochasticity Parameters
 #    stochastic_inhomogenity = true
 #    shape_parameter = 0.5
   []
@@ -632,6 +647,16 @@
     type = ElementAverageValue
     variable = eff_plastic_strain_inc
   []
+  [gb_eff_plastic_strain_inc_avg]
+    type = SideAverageValue
+    variable = eff_plastic_strain_inc
+    boundary = 'grain_boundary'
+  []
+  [gb_eff_plastic_strain_inc_max]
+    type = SideExtremeValue
+    variable = eff_plastic_strain_inc
+    boundary = 'grain_boundary'
+  []
   [avg_slip_resistance_dislocation_comp]
     type = ElementAverageValue
     variable = avg_slip_resistance_dislocation_comp
@@ -640,18 +665,33 @@
     type = ElementAverageValue
     variable = avg_slip_resistance_damage_comp
   []
+  [stress_hydro]
+    type = ElementAverageValue
+    variable = stress_hydro
+  []
+  [gb_stress_hydro_avg]
+    type = SideAverageValue
+    variable = stress_vm
+    boundary = 'grain_boundary'
+  []
+  [gb_stress_hydro_max]
+    type = SideExtremeValue
+    variable = stress_vm
+    boundary = 'grain_boundary'
+  []
   [stress_vm]
     type = ElementAverageValue
     variable = stress_vm
   []
   [gb_stress_vm_avg]
-    type = ElementAverageValue
-    variable = gb_stress_vm
+    type = SideAverageValue
+    variable = stress_vm
+    boundary = 'grain_boundary'
   []
   [gb_stress_vm_max]
-    type = ElementExtremeValue
-    variable = gb_stress_vm
-    value_type = max
+    type = SideExtremeValue
+    variable = stress_vm
+    boundary = 'grain_boundary'
   []
   [stress_zz]
     type = ElementAverageValue
@@ -836,14 +876,14 @@
 
   petsc_options_iname = '-pc_type -pc_asm_overlap -sub_pc_type -ksp_type -ksp_gmres_restart'
   petsc_options_value = ' asm      2              lu            gmres     200'
-  nl_abs_tol = 1e-10
-  nl_rel_tol = 1e-10
-  nl_abs_step_tol = 1e-10
+  nl_abs_tol = 1e-5
+  nl_rel_tol = 1e-4
+  nl_abs_step_tol = 1e-3
 
   dt = 1E-5
   dtmin = 1E-25
-  num_steps = 100
-#  end_time = 5e-3
+#  num_steps = 100
+  end_time = 5e-3
 #  [./Adaptivity]
 #      refine_fraction = 0.3
 #      max_h_level = 7

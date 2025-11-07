@@ -224,7 +224,6 @@ CrystalPlasticityUpdateIrr::initQpStatefulProperties()
 {
    RankTwoTensor crysrot; 
   CrystalPlasticityStressUpdateBase::initQpStatefulProperties();
-  //CrystalPlasticityStressUpdateBase::getSlipSystems();
    _dislocation_density[_qp].resize(_number_slip_systems);
   for (const auto i : make_range(_number_slip_systems))
   {
@@ -396,12 +395,12 @@ CrystalPlasticityUpdateIrr::updateStateVariables()
   for (const auto j : make_range(LIBMESH_DIM))
   for (const auto k : make_range(LIBMESH_DIM))
   {
-      N(j, k) = _slip_.transpose()plane_normal[i](j) * _slip_plane_normal[i](k);
+      N(j, k) = _slip_plane_normal[i](j) * _slip_plane_normal[i](k);
   }
   N.rotate(_crysrot[_qp]);
 //_slip_resistance[_qp][i] = _mu0 * _b * (std::sqrt(_hn * _dislocation_density[_qp][i]) + std::sqrt( _hd * N.doubleContraction( _damage_loop_density[_qp])));  
 slip_resistance_dislocation_component[i] = _mu0 * _b * (std::sqrt(_hn * _dislocation_density[_qp][i]));
-slip_resistance_damage_component[i] = _mu0 * _b * std::sqrt( _hd * N.doubleContraction( _damage_loop_density[_qp]));
+slip_resistance_damage_component[i] = _mu0 * _b * std::sqrt( _hd * std::abs( N.doubleContraction( _damage_loop_density[_qp])));
 _slip_resistance[_qp][i] = slip_resistance_dislocation_component[i] + slip_resistance_damage_component[i]; 
 
     if (_slip_resistance[_qp][i] > 0 && _include_stochastic_inhomogenity) 

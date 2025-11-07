@@ -11,4 +11,4 @@
 #SBATCH --output=job_%j.out
 # LOAD MODULES, INSERT CODE, AND RUN YOUR PROGRAMS HERE
 module load use.moose moose-dev-openmpi/2025.08.19
-mpiexec -n 112 moose-dev-exec /scratch/hasamds2/projects/irr_crystal_plasticity/irr_crystal_plasticity-opt -i irrFCC_poly_debug.i
+mpiexec -n 112 moose-dev-exec /scratch/hasamds2/projects/irr_crystal_plasticity/irr_crystal_plasticity-opt -i irrFCC_poly_6g100if.i
