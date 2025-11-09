@@ -217,6 +217,8 @@ Real stochasticInhomogenityFactor( std::mt19937 & gen);
   ///@}
   ///Element property read user object used to read in Euler angles
   const PropertyReadFile * const _read_prop_user_object;
+  unsigned int _n_euler_angle_vars;
+  const std::vector<const VariableValue *> _euler_angle_vars;
 
 
   /**

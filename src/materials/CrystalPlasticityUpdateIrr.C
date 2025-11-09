@@ -51,8 +51,8 @@ CrystalPlasticityUpdateIrr::validParams()
                                   "The ElementReadPropertyFile "
                                   "GeneralUserObject to read element "
                                   "specific property values from file");
-
-
+  params.addCoupledVar("euler_angle_variables",
+                       "Vector of coupled variables representing the Euler angles' components.");
   params.addParam<MaterialPropertyName>(
       "total_twin_volume_fraction",
       "Total twin volume fraction, if twinning is considered in the simulation");
@@ -115,6 +115,8 @@ CrystalPlasticityUpdateIrr::CrystalPlasticityUpdateIrr(
     _read_prop_user_object(isParamValid("read_prop_user_object")
                                ? &getUserObject<PropertyReadFile>("read_prop_user_object")
                                : nullptr),
+    _n_euler_angle_vars(coupledComponents("euler_angle_variables")),
+    _euler_angle_vars(coupledValues("euler_angle_variables")),
     // Twinning contributions, if used
     _include_twinning_in_Lp(parameters.isParamValid("total_twin_volume_fraction")),
      _twin_volume_fraction_total(_include_twinning_in_Lp
@@ -203,14 +205,31 @@ RankTwoTensor
 CrystalPlasticityUpdateIrr::computeQpCrysrot()
 {
     RealVectorValue Euler_angles(3);
+
+  if (_read_prop_user_object)
+  {
     Euler_angles(0) = _read_prop_user_object->getData(_current_elem, 0);
     Euler_angles(1) = _read_prop_user_object->getData(_current_elem, 1);
     Euler_angles(2) = _read_prop_user_object->getData(_current_elem, 2);
+  }
 
+  else if (_n_euler_angle_vars)
+  {
+    Euler_angles(0) = (*_euler_angle_vars[0])[_qp];
+    Euler_angles(1) = (*_euler_angle_vars[1])[_qp];
+    Euler_angles(2) = (*_euler_angle_vars[2])[_qp];
+  }
+  else{
+    Euler_angles(0) = 0.0;
+    Euler_angles(1) = 0.0;
+    Euler_angles(2) = 0.0;
+  }
+  
     RotationTensor rotMat(Euler_angles);
     return rotMat;
 
 }
+
 Real
 CrystalPlasticityUpdateIrr::stochasticInhomogenityFactor( std::mt19937 & gen) 
 {
@@ -231,11 +250,7 @@ CrystalPlasticityUpdateIrr::initQpStatefulProperties()
     _slip_increment[_qp][i] = 0.0;
    _dislocation_density[_qp][i] = _rho_n;
   }
-  if (_read_prop_user_object)
-   crysrot = computeQpCrysrot();
-   else
-   crysrot = RankTwoTensor::Identity();
-   
+  crysrot = computeQpCrysrot();
   _damage_loop_density[_qp] = _damage_loop_density_initial;
   _damage_loop_density[_qp].rotate( crysrot); 
 }

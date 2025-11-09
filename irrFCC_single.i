@@ -544,6 +544,7 @@
     type = ComputeElasticityTensorCP
     C_ijkl = '2.04e5 1.36e5 1.36e5 2.04e5 1.36e5 2.04e5 1.26e5 1.26e5 1.26e5' # roughly austenitic steel
     fill_method = symmetric9
+    euler_angle_variables = '180.0 63.44 90.0' 
   []
   [stress]
     type = ComputeMultipleCrystalPlasticityStress
@@ -559,12 +560,13 @@
       coplanar_coefficient_twin_hardening = 2000
       non_coplanar_coefficient_twin_hardening = 27000
       non_coplanar_twin_hardening_exponent = 0.05
-      upper_limit_twin_volume_fraction = 0.15
+      #upper_limit_twin_volume_fraction = 0.15
   []
   [slip_xtalpl]
     type = CrystalPlasticityUpdateIrr
     number_slip_systems = 12
     slip_sys_file_name = input_slip_sys_fcc12.txt
+    euler_angle_variables = '180.0 63.44 90.0' 
     total_twin_volume_fraction = 'twin_total_volume_fraction_twins'
     mu0 = 80E3 # shear modulus in GPa
     g0 = 90 # CRSS MPa
