@@ -54,11 +54,11 @@
     order = CONSTANT
     family = MONOMIAL
   []
-  [stress_zz]
+  [stress_xx]
     order = CONSTANT
     family = MONOMIAL
   []
-  [fp_zz]
+  [fp_xx]
     order = CONSTANT
     family = MONOMIAL
   []
@@ -262,20 +262,20 @@
     scalar_type = VonMisesStress
     execute_on = timestep_end
   []
-  [stress_zz]
+  [stress_xx]
     type = RankTwoAux
-    variable = stress_zz
+    variable = stress_xx
     rank_two_tensor = stress
-    index_j = 2
-    index_i = 2
+    index_j = 0
+    index_i = 0
     execute_on = timestep_end
   []
-  [fp_zz]
+  [fp_xx]
     type = RankTwoAux
-    variable = fp_zz
+    variable = fp_xx
     rank_two_tensor = plastic_deformation_gradient
-    index_j = 2
-    index_i = 2
+    index_j = 0
+    index_i = 0
     execute_on = timestep_end
   []
   [slip_increment_0]
@@ -580,8 +580,8 @@
   []
   [tdisp]
     type = FunctionDirichletBC
-    variable = disp_z
-    boundary = front 
+    variable = disp_x
+    boundary = 'right' 
     function = '0.3*t'
   []
 []
@@ -604,8 +604,8 @@
       number_slip_systems = 12
       slip_sys_file_name = 'fcc_input_twinning_systems.txt'
       initial_twin_lattice_friction = 100.0
-      coplanar_coefficient_twin_hardening = 20000
-      non_coplanar_coefficient_twin_hardening = 27000
+      coplanar_coefficient_twin_hardening = 27000
+      non_coplanar_coefficient_twin_hardening = 2000
       non_coplanar_twin_hardening_exponent = 0.05
       upper_limit_twin_volume_fraction = 0.15
   []
@@ -627,11 +627,11 @@
     # Irradiation Hardening Params
     number_possible_damage_plane = 16
     damage_plane_file_name = input_damage_plane_fcc.txt
-    damage_loop_diameter = 8E-6 # 8 nm diameter
-    rho_l = 3E13 # irradiation damage loop density
+    damage_loop_diameter = 5.5E-6 # 5.5 nm diameter
+    rho_l = 3E14 # irradiation damage loop density
     eta = 66.6 # Anahiliation Efficiency
     hn = 0.125
-    hd = 0.625
+    hd = 0.091
     xm = 0.05
     #Stochasticity Parameters
 #    stochastic_inhomogenity = true
@@ -671,12 +671,12 @@
   []
   [gb_stress_hydro_avg]
     type = SideAverageValue
-    variable = stress_vm
+    variable = stress_hydro
     boundary = 'grain_boundary'
   []
   [gb_stress_hydro_max]
     type = SideExtremeValue
-    variable = stress_vm
+    variable = stress_hydro
     boundary = 'grain_boundary'
   []
   [stress_vm]
@@ -693,13 +693,13 @@
     variable = stress_vm
     boundary = 'grain_boundary'
   []
-  [stress_zz]
+  [stress_xx]
     type = ElementAverageValue
-    variable = stress_zz
+    variable = stress_xx
   []
-  [fp_zz]
+  [fp_xx]
     type = ElementAverageValue
-    variable = fp_zz
+    variable = fp_xx
   []
   [slip_increment_0]
     type = ElementAverageValue

@@ -58,6 +58,7 @@ CrystalPlasticityUpdateIrr::validParams()
       "Total twin volume fraction, if twinning is considered in the simulation");
   params.addParam<bool>("stochastic_inhomogenity", false,  "activation flag for the stochastic distribution");
   params.addParam<Real>("shape_parameter", 1.0,  "shape parameter of the stochastic distribution");
+  params.addParam<bool>("irradiation", true, "activation flag for the effect of irradiation");
 
   return params;
 }
@@ -124,10 +125,15 @@ CrystalPlasticityUpdateIrr::CrystalPlasticityUpdateIrr(
                                      : nullptr),
      // Stochastic inhomnogenity if used
     _include_stochastic_inhomogenity(getParam<bool>("stochastic_inhomogenity")),
-    _shape_param(getParam<Real>("shape_parameter"))
+    _shape_param(getParam<Real>("shape_parameter")),
+    // Irradiation Effect
+   _include_irradiation(getParam<bool>("irradiation")) 
  {
+     if (_include_irradiation)
+     {
 getDamageSystem();
 initiateDamageLoopDensity();
+     }
 }
 
 void
@@ -250,9 +256,12 @@ CrystalPlasticityUpdateIrr::initQpStatefulProperties()
     _slip_increment[_qp][i] = 0.0;
    _dislocation_density[_qp][i] = _rho_n;
   }
+  if(_include_irradiation)
+  {
   crysrot = computeQpCrysrot();
   _damage_loop_density[_qp] = _damage_loop_density_initial;
   _damage_loop_density[_qp].rotate( crysrot); 
+  }
 }
 
 
@@ -264,8 +273,11 @@ CrystalPlasticityUpdateIrr::setInitialConstitutiveVariableValues()
   _previous_substep_slip_resistance = _slip_resistance_old[_qp];
   _dislocation_density[_qp] = _dislocation_density_old[_qp];
   _previous_substep_dislocation_density = _dislocation_density_old[_qp];
+  if (_include_irradiation)
+  {
   _damage_loop_density[_qp] = _damage_loop_density_old[_qp];
   _previous_substep_damage_loop_density = _damage_loop_density_old[_qp];
+  }
 }
 
 void
@@ -274,6 +286,7 @@ CrystalPlasticityUpdateIrr::setSubstepConstitutiveVariableValues()
   // Would also set substepped dislocation densities here if included in this model
   _slip_resistance[_qp] = _previous_substep_slip_resistance;
   _dislocation_density[_qp] = _previous_substep_dislocation_density;
+  if (_include_irradiation)
   _damage_loop_density[_qp] = _previous_substep_damage_loop_density;
 }
 
@@ -303,15 +316,15 @@ void
 CrystalPlasticityUpdateIrr::calculateEquivalentSlipIncrement(
     RankTwoTensor & equivalent_slip_increment)
 {
-  // if (_include_twinning_in_Lp)
-  // {
-  //   for (const auto i : make_range(_number_slip_systems))
-  //     equivalent_slip_increment += (1.0 - (*_twin_volume_fraction_total)[_qp]) *
-  //                                  _flow_direction[_qp][i] * _slip_increment[_qp][i] * _substep_dt;
-  // }
-  // else // if no twinning volume fraction material property supplied, use base class
-  //   CrystalPlasticityStressUpdateBase::calculateEquivalentSlipIncrement(equivalent_slip_increment);
-  CrystalPlasticityStressUpdateBase::calculateEquivalentSlipIncrement(equivalent_slip_increment);
+   if (_include_twinning_in_Lp)
+   {
+     for (const auto i : make_range(_number_slip_systems))
+       equivalent_slip_increment += (1.0 - (*_twin_volume_fraction_total)[_qp]) *
+                                    _flow_direction[_qp][i] * _slip_increment[_qp][i] * _substep_dt;
+   }
+   else // if no twinning volume fraction material property supplied, use base class
+     CrystalPlasticityStressUpdateBase::calculateEquivalentSlipIncrement(equivalent_slip_increment);
+  //CrystalPlasticityStressUpdateBase::calculateEquivalentSlipIncrement(equivalent_slip_increment);
   _equivalent_slip_increment[_qp] = equivalent_slip_increment;
   _effective_equivalent_slip_increment[_qp] = std::sqrt( 2.0 / 3.0 * equivalent_slip_increment.doubleContraction( equivalent_slip_increment));
 }
@@ -346,6 +359,7 @@ CrystalPlasticityUpdateIrr::updateSubstepConstitutiveVariableValues()
   // Would also set substepped dislocation densities here if included in this model
   _previous_substep_slip_resistance = _slip_resistance[_qp];
   _previous_substep_dislocation_density = _dislocation_density[_qp];
+  if (_include_irradiation)
   _previous_substep_damage_loop_density = _damage_loop_density[_qp];
 }
 
@@ -354,6 +368,7 @@ CrystalPlasticityUpdateIrr::cacheStateVariablesBeforeUpdate()
 {
   _slip_resistance_before_update = _slip_resistance[_qp];
   _dislocation_density_before_update = _dislocation_density[_qp];
+  if (_include_irradiation)
   _damage_loop_density_before_update = _damage_loop_density[_qp];
 }
 
@@ -370,6 +385,8 @@ CrystalPlasticityUpdateIrr::calculateStateVariableEvolutionRateComponent()
     _dislocation_density_increment[i] = 
 	_k1 * std::sqrt( _rho0 * _dislocation_density[_qp][i]) * _slip_increment[_qp][i] - _k20 * _gamma_dot_k0 * _dislocation_density[_qp][i];  
 
+    if (_include_irradiation)
+    {
     for (const auto j : make_range(LIBMESH_DIM))
       for (const auto k : make_range(LIBMESH_DIM))
   {
@@ -378,6 +395,7 @@ CrystalPlasticityUpdateIrr::calculateStateVariableEvolutionRateComponent()
     N.rotate(_crysrot[_qp]);
     _damage_loop_density_increment += -_eta * N.doubleContraction(_damage_loop_density[_qp]) * N * std::abs(_slip_increment[_qp][i]);
     N.zero();
+    }
 
 }
 }
@@ -406,7 +424,8 @@ CrystalPlasticityUpdateIrr::updateStateVariables()
     else
       _dislocation_density[_qp][i] = _previous_substep_dislocation_density[i] + _dislocation_density_increment[i];
       
-
+if (_include_irradiation)
+{
   for (const auto j : make_range(LIBMESH_DIM))
   for (const auto k : make_range(LIBMESH_DIM))
   {
@@ -414,8 +433,9 @@ CrystalPlasticityUpdateIrr::updateStateVariables()
   }
   N.rotate(_crysrot[_qp]);
 //_slip_resistance[_qp][i] = _mu0 * _b * (std::sqrt(_hn * _dislocation_density[_qp][i]) + std::sqrt( _hd * N.doubleContraction( _damage_loop_density[_qp])));  
-slip_resistance_dislocation_component[i] = _mu0 * _b * (std::sqrt(_hn * _dislocation_density[_qp][i]));
 slip_resistance_damage_component[i] = _mu0 * _b * std::sqrt( _hd * std::abs( N.doubleContraction( _damage_loop_density[_qp])));
+  }
+slip_resistance_dislocation_component[i] = _mu0 * _b * (std::sqrt(_hn * _dislocation_density[_qp][i]));
 _slip_resistance[_qp][i] = slip_resistance_dislocation_component[i] + slip_resistance_damage_component[i]; 
 
     if (_slip_resistance[_qp][i] > 0 && _include_stochastic_inhomogenity) 
@@ -429,8 +449,12 @@ _slip_resistance[_qp][i]*= stochasticInhomogenityFactor(gen);
   N.zero();
   }
   _avg_slip_resistance_dislocation[_qp] = std::accumulate(slip_resistance_dislocation_component.begin(), slip_resistance_dislocation_component.end(),0.0)/_number_slip_systems;
+
+  if (_include_irradiation)
+{
   _avg_slip_resistance_damage[_qp] = std::accumulate(slip_resistance_damage_component.begin(), slip_resistance_damage_component.end(), 0.0)/_number_slip_systems;
   _slip_resistance_damage[_qp] = slip_resistance_damage_component;
+}
 
   return true;
 }

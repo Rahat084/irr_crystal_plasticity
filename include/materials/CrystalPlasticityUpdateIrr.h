@@ -245,5 +245,8 @@ Real stochasticInhomogenityFactor( std::mt19937 & gen);
    * stochastic CRSS calculation, per Liu IJP (2022).
    */
   const Real _shape_param;
- 
+  /**
+   * Flag to ignore effect of Radiation
+   */
+  const bool _include_irradiation; 
 };

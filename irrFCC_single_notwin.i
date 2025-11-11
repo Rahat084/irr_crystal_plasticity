@@ -144,58 +144,6 @@
     order = CONSTANT
     family = MONOMIAL
   []
-  [twin_volume_fraction_0]
-   order = CONSTANT
-   family = MONOMIAL
-  []
-  [twin_volume_fraction_1]
-   order = CONSTANT
-   family = MONOMIAL
-  []
-  [twin_volume_fraction_2]
-   order = CONSTANT
-   family = MONOMIAL
-  []
-  [twin_volume_fraction_3]
-   order = CONSTANT
-   family = MONOMIAL
-  []
-  [twin_volume_fraction_4]
-   order = CONSTANT
-   family = MONOMIAL
-  []
-  [twin_volume_fraction_5]
-   order = CONSTANT
-   family = MONOMIAL
-  []
-  [twin_volume_fraction_6]
-   order = CONSTANT
-   family = MONOMIAL
-  []
-  [twin_volume_fraction_7]
-   order = CONSTANT
-   family = MONOMIAL
-  []
-  [twin_volume_fraction_8]
-   order = CONSTANT
-   family = MONOMIAL
-  []
-  [twin_volume_fraction_9]
-   order = CONSTANT
-   family = MONOMIAL
-  []
-  [twin_volume_fraction_10]
-   order = CONSTANT
-   family = MONOMIAL
-  []
-  [twin_volume_fraction_11]
-   order = CONSTANT
-   family = MONOMIAL
-  []
-  [total_twin_volume_fraction]
-    order = CONSTANT
-    family = MONOMIAL
-  []
 []
 
 [Physics/SolidMechanics/QuasiStatic/all]
@@ -419,96 +367,6 @@
    property = slip_resistance_damage
    index = 11
   []
-  [twin_volume_fraction_0]
-   type = MaterialStdVectorAux
-   variable = twin_volume_fraction_0
-   property = twin_twin_system_volume_fraction
-   index = 0
-   execute_on = timestep_end
-  []
-  [twin_volume_fraction_1]
-   type = MaterialStdVectorAux
-   variable = twin_volume_fraction_1
-   property = twin_twin_system_volume_fraction
-   index = 1
-   execute_on = timestep_end
-  []
-  [twin_volume_fraction_2]
-   type = MaterialStdVectorAux
-   variable = twin_volume_fraction_2
-   property = twin_twin_system_volume_fraction
-   index = 2
-   execute_on = timestep_end
-  []
-  [twin_volume_fraction_3]
-   type = MaterialStdVectorAux
-   variable = twin_volume_fraction_3
-   property = twin_twin_system_volume_fraction
-   index = 3
-   execute_on = timestep_end
-  []
-  [twin_volume_fraction_4]
-   type = MaterialStdVectorAux
-   variable = twin_volume_fraction_4
-   property = twin_twin_system_volume_fraction
-   index = 4
-   execute_on = timestep_end
-  []
-  [twin_volume_fraction_5]
-   type = MaterialStdVectorAux
-   variable = twin_volume_fraction_5
-   property = twin_twin_system_volume_fraction
-   index = 5
-   execute_on = timestep_end
-  []
-  [twin_volume_fraction_6]
-   type = MaterialStdVectorAux
-   variable = twin_volume_fraction_6
-   property = twin_twin_system_volume_fraction
-   index = 6
-   execute_on = timestep_end
-  []
-  [twin_volume_fraction_7]
-   type = MaterialStdVectorAux
-   variable = twin_volume_fraction_7
-   property = twin_twin_system_volume_fraction
-   index = 7
-   execute_on = timestep_end
-  []
-  [twin_volume_fraction_8]
-   type = MaterialStdVectorAux
-   variable = twin_volume_fraction_8
-   property = twin_twin_system_volume_fraction
-   index = 8
-   execute_on = timestep_end
-  []
-  [twin_volume_fraction_9]
-   type = MaterialStdVectorAux
-   variable = twin_volume_fraction_9
-   property = twin_twin_system_volume_fraction
-   index = 9
-   execute_on = timestep_end
-  []
-  [twin_volume_fraction_10]
-   type = MaterialStdVectorAux
-   variable = twin_volume_fraction_10
-   property = twin_twin_system_volume_fraction
-   index = 10
-   execute_on = timestep_end
-  []
-  [twin_volume_fraction_11]
-   type = MaterialStdVectorAux
-   variable = twin_volume_fraction_11
-   property = twin_twin_system_volume_fraction
-   index = 11
-   execute_on = timestep_end
-  []
-  [total_twin_volume_fraction]
-    type = MaterialRealAux
-    variable = total_twin_volume_fraction
-    property = twin_total_volume_fraction_twins
-    execute_on = timestep_end
-  []
 []
 
 [BCs]
@@ -549,26 +407,14 @@
   []
   [stress]
     type = ComputeMultipleCrystalPlasticityStress
-    crystal_plasticity_models = 'twin_xtalpl slip_xtalpl'
+    crystal_plasticity_models = 'slip_xtalpl'
     tan_mod_type = exact
-  []
-  [twin_xtalpl]
-      type = CrystalPlasticityTwinningUpdateIrr
-      base_name = twin
-      number_slip_systems = 12
-      slip_sys_file_name = 'fcc_input_twinning_systems.txt'
-      initial_twin_lattice_friction = 100.0
-      coplanar_coefficient_twin_hardening = 27000
-      non_coplanar_coefficient_twin_hardening = 2000
-      non_coplanar_twin_hardening_exponent = 0.05
-      #upper_limit_twin_volume_fraction = 0.15
   []
   [slip_xtalpl]
     type = CrystalPlasticityUpdateIrr
     number_slip_systems = 12
     slip_sys_file_name = input_slip_sys_fcc12.txt
     euler_angle_variables = '0.0 0.0 0.0' 
-    total_twin_volume_fraction = 'twin_total_volume_fraction_twins'
     mu0 = 80E3 # shear modulus in GPa
     g0 = 90 # CRSS MPa
     ao = 3E4 # initial slip rate
@@ -581,8 +427,8 @@
     # Irradiation Hardening Params
     number_possible_damage_plane = 16
     damage_plane_file_name = input_damage_plane_fcc.txt
-    damage_loop_diameter = 5.5E-6 # 5.5 nm diameter
-    rho_l = 3E14 # irradiation damage loop density
+    damage_loop_diameter = 2.7E-6 # 2.7 nm diameter
+    rho_l = 3E13 # irradiation damage loop density
     eta = 66.6 # Anahiliation Efficiency
     hn = 0.125
     hd = 0.091
@@ -712,58 +558,6 @@
   [slip_resistance_damage_11]
     type = ElementAverageValue
     variable = slip_resistance_damage_11
-  []
-  [twin_volume_fraction_0]
-    type = ElementAverageValue
-    variable = twin_volume_fraction_0
-  []
-  [twin_volume_fraction_1]
-    type = ElementAverageValue
-    variable = twin_volume_fraction_1
-  []
-  [twin_volume_fraction_2]
-    type = ElementAverageValue
-    variable = twin_volume_fraction_2
-  []
-  [twin_volume_fraction_3]
-    type = ElementAverageValue
-    variable = twin_volume_fraction_3
-  []
-  [twin_volume_fraction_4]
-    type = ElementAverageValue
-    variable = twin_volume_fraction_4
-  []
-  [twin_volume_fraction_5]
-    type = ElementAverageValue
-    variable = twin_volume_fraction_5
-  []
-  [twin_volume_fraction_6]
-    type = ElementAverageValue
-    variable = twin_volume_fraction_6
-  []
-  [twin_volume_fraction_7]
-    type = ElementAverageValue
-    variable = twin_volume_fraction_7
-  []
-  [twin_volume_fraction_8]
-    type = ElementAverageValue
-    variable = twin_volume_fraction_8
-  []
-  [twin_volume_fraction_9]
-    type = ElementAverageValue
-    variable = twin_volume_fraction_9
-  []
-  [twin_volume_fraction_10]
-    type = ElementAverageValue
-    variable = twin_volume_fraction_10
-  []
-  [twin_volume_fraction_11]
-    type = ElementAverageValue
-    variable = twin_volume_fraction_11
-  []
-  [total_twin_volume_fraction]
-    type = ElementAverageValue
-    variable = total_twin_volume_fraction
   []
 []
 

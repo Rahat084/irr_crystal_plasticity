@@ -3,19 +3,33 @@
 []
 
 [Mesh]
-  [cube]
-    type = GeneratedMeshGenerator
-    dim = 3
-    nx = 40
-    ny = 40
-    nz = 40
-    elem_type = HEX8
-    xmax = 3E-3
-    xmin = 0
-    ymax = 3E-3
-    ymin = 0 
-    zmax = 3E-3
-    zmin = 0
+  [./fmg]
+    type = FileMeshGenerator
+    file = six_grain_poly.msh
+    allow_renumbering = False
+  []
+  [scale_down]
+    type = TransformGenerator
+    input = fmg
+    transform = SCALE
+    vector_value = '1.5e-3 1.5e-3 1.5e-3'
+  []
+[]
+
+[MeshDivisions]
+  [block_div]
+    type = SubdomainsDivision
+  []
+[]
+
+[UserObjects]
+  [prop_read]
+    type = PropertyReadFile
+    prop_file_name = 'euler_ang_six_grain.txt'
+    #use_random_voronoi = false
+    read_type = 'block'
+    nblock = 6
+    nprop = 3
   []
 []
 
@@ -25,10 +39,6 @@
     family = MONOMIAL
   []
   [avg_slip_resistance_dislocation_comp]
-    order = CONSTANT
-    family = MONOMIAL
-  []
-  [avg_slip_resistance_damage_comp]
     order = CONSTANT
     family = MONOMIAL
   []
@@ -96,54 +106,6 @@
     order = CONSTANT
     family = MONOMIAL
   []
-  [slip_resistance_damage_0]
-    order = CONSTANT
-    family = MONOMIAL
-  []
-  [slip_resistance_damage_1]
-    order = CONSTANT
-    family = MONOMIAL
-  []
-  [slip_resistance_damage_2]
-    order = CONSTANT
-    family = MONOMIAL
-  []
-  [slip_resistance_damage_3]
-    order = CONSTANT
-    family = MONOMIAL
-  []
-  [slip_resistance_damage_4]
-    order = CONSTANT
-    family = MONOMIAL
-  []
-  [slip_resistance_damage_5]
-    order = CONSTANT
-    family = MONOMIAL
-  []
-  [slip_resistance_damage_6]
-    order = CONSTANT
-    family = MONOMIAL
-  []
-  [slip_resistance_damage_7]
-    order = CONSTANT
-    family = MONOMIAL
-  []
-  [slip_resistance_damage_8]
-    order = CONSTANT
-    family = MONOMIAL
-  []
-  [slip_resistance_damage_9]
-    order = CONSTANT
-    family = MONOMIAL
-  []
-  [slip_resistance_damage_10]
-    order = CONSTANT
-    family = MONOMIAL
-  []
-  [slip_resistance_damage_11]
-    order = CONSTANT
-    family = MONOMIAL
-  []
   [twin_volume_fraction_0]
    order = CONSTANT
    family = MONOMIAL
@@ -196,6 +158,18 @@
     order = CONSTANT
     family = MONOMIAL
   []
+  [euler_angle_1]
+      order = CONSTANT
+      family = MONOMIAL
+   []
+  [euler_angle_2]
+      order = CONSTANT
+      family = MONOMIAL
+   []
+  [euler_angle_3]
+      order = CONSTANT
+      family = MONOMIAL
+   []
 []
 
 [Physics/SolidMechanics/QuasiStatic/all]
@@ -214,12 +188,6 @@
     type = MaterialRealAux
     variable = avg_slip_resistance_dislocation_comp
     property = avg_slip_resistance_dislocation
-    execute_on = timestep_end
-  []
-  [avg_slip_resistance_damage_comp]
-    type = MaterialRealAux
-    variable = avg_slip_resistance_damage_comp
-    property = avg_slip_resistance_damage
     execute_on = timestep_end
   []
   [stress_hydro]
@@ -336,89 +304,6 @@
    index = 11
    execute_on = timestep_end
   []
-  [slip_resistance_damage_0]
-   type = MaterialStdVectorAux
-   variable = slip_resistance_damage_0
-   property = slip_resistance_damage
-   index = 0
-   execute_on = timestep_end
-  []
-  [slip_resistance_damage_1]
-   type = MaterialStdVectorAux
-   variable = slip_resistance_damage_1
-   property = slip_resistance_damage
-   index = 1
-   execute_on = timestep_end
-  []
-  [slip_resistance_damage_2]
-   type = MaterialStdVectorAux
-   variable = slip_resistance_damage_2
-   property = slip_resistance_damage
-   index = 2
-   execute_on = timestep_end
-  []
-  [slip_resistance_damage_3]
-   type = MaterialStdVectorAux
-   variable = slip_resistance_damage_3
-   property = slip_resistance_damage
-   index = 3
-   execute_on = timestep_end
-  []
-  [slip_resistance_damage_4]
-   type = MaterialStdVectorAux
-   variable = slip_resistance_damage_4
-   property = slip_resistance_damage
-   index = 4
-   execute_on = timestep_end
-  []
-  [slip_resistance_damage_5]
-   type = MaterialStdVectorAux
-   variable = slip_resistance_damage_5
-   property = slip_resistance_damage
-   index = 5
-   execute_on = timestep_end
-  []
-  [slip_resistance_damage_6]
-   type = MaterialStdVectorAux
-   variable = slip_resistance_damage_6
-   property = slip_resistance_damage
-   index = 6
-   execute_on = timestep_end
-  []
-  [slip_resistance_damage_7]
-   type = MaterialStdVectorAux
-   variable = slip_resistance_damage_7
-   property = slip_resistance_damage
-   index = 7
-   execute_on = timestep_end
-  []
-  [slip_resistance_damage_8]
-   type = MaterialStdVectorAux
-   variable = slip_resistance_damage_8
-   property = slip_resistance_damage
-   index = 8
-   execute_on = timestep_end
-  []
-  [slip_resistance_damage_9]
-   type = MaterialStdVectorAux
-   variable = slip_resistance_damage_9
-   property = slip_resistance_damage
-   index = 9
-   execute_on = timestep_end
-  []
-  [slip_resistance_damage_10]
-   type = MaterialStdVectorAux
-   variable = slip_resistance_damage_10
-   property = slip_resistance_damage
-   index = 10
-   execute_on = timestep_end
-  []
-  [slip_resistance_damage_11]
-   type = MaterialStdVectorAux
-   variable = slip_resistance_damage_11
-   property = slip_resistance_damage
-   index = 11
-  []
   [twin_volume_fraction_0]
    type = MaterialStdVectorAux
    variable = twin_volume_fraction_0
@@ -509,32 +394,53 @@
     property = twin_total_volume_fraction_twins
     execute_on = timestep_end
   []
+  [euler_angle_1]
+    type = MaterialRealVectorValueAux
+    variable = euler_angle_1
+    property = updated_Euler_angle
+    component = 0
+    execute_on = timestep_end
+  []
+  [euler_angle_2]
+    type = MaterialRealVectorValueAux
+    variable = euler_angle_2
+    property = updated_Euler_angle
+    component = 1 
+    execute_on = timestep_end
+  []
+  [euler_angle_3]
+    type = MaterialRealVectorValueAux
+    variable = euler_angle_3
+    property = updated_Euler_angle
+    component = 2
+    execute_on = timestep_end
+  []
 []
 
 [BCs]
-#  [fix_y]
-#    type = DirichletBC
-#    variable = disp_y
-#    preset = true
-#    boundary = 'bottom'
-#    value = 0
-#  []
+  [fix_y]
+    type = DirichletBC
+    variable = disp_y
+    preset = true
+    boundary = 'bottom'
+    value = 0
+  []
   [fix_x]
     type = DirichletBC
     variable = disp_x
     boundary = 'left'
     value = 0
   []
- # [fix_z]
- #   type = DirichletBC
- #   variable = disp_z
- #   boundary = 'back'
- #   value = 0
- # []
+  [fix_z]
+    type = DirichletBC
+    variable = disp_z
+    boundary = 'back'
+    value = 0
+  []
   [tdisp]
     type = FunctionDirichletBC
     variable = disp_x
-    boundary = right
+    boundary = 'right' 
     function = '0.3*t'
   []
 []
@@ -542,10 +448,9 @@
 [Materials]
   [elasticity_tensor]
     type = ComputeElasticityTensorCP
-    #C_ijkl = '2.04e5 1.36e5 1.36e5 2.04e5 1.36e5 2.04e5 1.26e5 1.26e5 1.26e5' # roughly austenitic steel
-    C_ijkl = '2.24e5 1.496e5 1.496e5 2.464e5 1.1496e5 2.464e5 1.386e5 1.386e5 1.386e5' # roughly austenitic steel
+    C_ijkl = '2.04e5 1.36e5 1.36e5 2.04e5 1.36e5 2.04e5 1.26e5 1.26e5 1.26e5' # roughly austenitic steel
     fill_method = symmetric9
-    euler_angle_variables = '0.0 0.0 0.0' 
+    read_prop_user_object = prop_read
   []
   [stress]
     type = ComputeMultipleCrystalPlasticityStress
@@ -558,16 +463,16 @@
       number_slip_systems = 12
       slip_sys_file_name = 'fcc_input_twinning_systems.txt'
       initial_twin_lattice_friction = 100.0
-      coplanar_coefficient_twin_hardening = 27000
-      non_coplanar_coefficient_twin_hardening = 2000
+      coplanar_coefficient_twin_hardening = 20000
+      non_coplanar_coefficient_twin_hardening = 27000
       non_coplanar_twin_hardening_exponent = 0.05
-      #upper_limit_twin_volume_fraction = 0.15
+      upper_limit_twin_volume_fraction = 0.15
   []
   [slip_xtalpl]
     type = CrystalPlasticityUpdateIrr
     number_slip_systems = 12
     slip_sys_file_name = input_slip_sys_fcc12.txt
-    euler_angle_variables = '0.0 0.0 0.0' 
+    read_prop_user_object = prop_read
     total_twin_volume_fraction = 'twin_total_volume_fraction_twins'
     mu0 = 80E3 # shear modulus in GPa
     g0 = 90 # CRSS MPa
@@ -585,10 +490,15 @@
     rho_l = 3E14 # irradiation damage loop density
     eta = 66.6 # Anahiliation Efficiency
     hn = 0.125
-    hd = 0.091
+    hd = 0.625
     xm = 0.05
+    #Stochasticity Parameters
 #    stochastic_inhomogenity = true
 #    shape_parameter = 0.5
+    irradiation = false
+  []
+  [updated_euler_angle]
+    type = ComputeUpdatedEulerAngle
   []
 []
 
@@ -597,17 +507,47 @@
     type = ElementAverageValue
     variable = eff_plastic_strain_inc
   []
+  [gb_eff_plastic_strain_inc_avg]
+    type = SideAverageValue
+    variable = eff_plastic_strain_inc
+    boundary = 'grain_boundary'
+  []
+  [gb_eff_plastic_strain_inc_max]
+    type = SideExtremeValue
+    variable = eff_plastic_strain_inc
+    boundary = 'grain_boundary'
+  []
   [avg_slip_resistance_dislocation_comp]
     type = ElementAverageValue
     variable = avg_slip_resistance_dislocation_comp
   []
-  [avg_slip_resistance_damage_comp]
+  [stress_hydro]
     type = ElementAverageValue
-    variable = avg_slip_resistance_damage_comp
+    variable = stress_hydro
+  []
+  [gb_stress_hydro_avg]
+    type = SideAverageValue
+    variable = stress_hydro
+    boundary = 'grain_boundary'
+  []
+  [gb_stress_hydro_max]
+    type = SideExtremeValue
+    variable = stress_hydro
+    boundary = 'grain_boundary'
   []
   [stress_vm]
     type = ElementAverageValue
     variable = stress_vm
+  []
+  [gb_stress_vm_avg]
+    type = SideAverageValue
+    variable = stress_vm
+    boundary = 'grain_boundary'
+  []
+  [gb_stress_vm_max]
+    type = SideExtremeValue
+    variable = stress_vm
+    boundary = 'grain_boundary'
   []
   [stress_xx]
     type = ElementAverageValue
@@ -665,54 +605,6 @@
     type = ElementAverageValue
     variable = slip_increment_11
   []
-  [slip_resistance_damage_0]
-    type = ElementAverageValue
-    variable = slip_resistance_damage_0
-  []
-  [slip_resistance_damage_1]
-    type = ElementAverageValue
-    variable = slip_resistance_damage_1
-  []
-  [slip_resistance_damage_2]
-    type = ElementAverageValue
-    variable = slip_resistance_damage_2
-  []
-  [slip_resistance_damage_3]
-    type = ElementAverageValue
-    variable = slip_resistance_damage_3
-  []
-  [slip_resistance_damage_4]
-    type = ElementAverageValue
-    variable = slip_resistance_damage_4
-  []
-  [slip_resistance_damage_5]
-    type = ElementAverageValue
-    variable = slip_resistance_damage_5
-  []
-  [slip_resistance_damage_6]
-    type = ElementAverageValue
-    variable = slip_resistance_damage_6
-  []
-  [slip_resistance_damage_7]
-    type = ElementAverageValue
-    variable = slip_resistance_damage_7
-  []
-  [slip_resistance_damage_8]
-    type = ElementAverageValue
-    variable = slip_resistance_damage_8
-  []
-  [slip_resistance_damage_9]
-    type = ElementAverageValue
-    variable = slip_resistance_damage_9
-  []
-  [slip_resistance_damage_10]
-    type = ElementAverageValue
-    variable = slip_resistance_damage_10
-  []
-  [slip_resistance_damage_11]
-    type = ElementAverageValue
-    variable = slip_resistance_damage_11
-  []
   [twin_volume_fraction_0]
     type = ElementAverageValue
     variable = twin_volume_fraction_0
@@ -765,6 +657,18 @@
     type = ElementAverageValue
     variable = total_twin_volume_fraction
   []
+  [euler_angle_1]
+    type = ElementAverageValue
+    variable = euler_angle_1
+  []
+  [euler_angle_2]
+    type = ElementAverageValue
+    variable = euler_angle_2
+  []
+  [euler_angle_3]
+    type = ElementAverageValue
+    variable = euler_angle_3
+  []
 []
 
 [Preconditioning]
@@ -780,9 +684,9 @@
 
   petsc_options_iname = '-pc_type -pc_asm_overlap -sub_pc_type -ksp_type -ksp_gmres_restart'
   petsc_options_value = ' asm      2              lu            gmres     200'
-  nl_abs_tol = 1e-10
-  nl_rel_tol = 1e-10
-  nl_abs_step_tol = 1e-10
+  nl_abs_tol = 1e-5
+  nl_rel_tol = 1e-4
+  nl_abs_step_tol = 1e-3
 
   dt = 1E-5
   dtmin = 1E-25
