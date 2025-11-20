@@ -448,7 +448,8 @@
 [Materials]
   [elasticity_tensor]
     type = ComputeElasticityTensorCP
-    C_ijkl = '2.04e5 1.36e5 1.36e5 2.04e5 1.36e5 2.04e5 1.26e5 1.26e5 1.26e5' # roughly austenitic steel
+    #C_ijkl = '2.04e5 1.36e5 1.36e5 2.04e5 1.36e5 2.04e5 1.26e5 1.26e5 1.26e5' # roughly austenitic steel
+    C_ijkl = '2.24e5 1.496e5 1.496e5 2.464e5 1.1496e5 2.464e5 1.386e5 1.386e5 1.386e5' # roughly austenitic steel
     fill_method = symmetric9
     read_prop_user_object = prop_read
   []
@@ -462,11 +463,12 @@
       base_name = twin
       number_slip_systems = 12
       slip_sys_file_name = 'fcc_input_twinning_systems.txt'
-      initial_twin_lattice_friction = 100.0
-      coplanar_coefficient_twin_hardening = 20000
-      non_coplanar_coefficient_twin_hardening = 27000
+      twin_strain_rate_sensitivity_exponent = 0.05
+      initial_twin_lattice_friction = 470.0
+      coplanar_coefficient_twin_hardening = 27000
+      non_coplanar_coefficient_twin_hardening = 2000
       non_coplanar_twin_hardening_exponent = 0.05
-      upper_limit_twin_volume_fraction = 0.15
+      upper_limit_twin_volume_fraction = 0.8
   []
   [slip_xtalpl]
     type = CrystalPlasticityUpdateIrr
@@ -486,11 +488,11 @@
     # Irradiation Hardening Params
     number_possible_damage_plane = 16
     damage_plane_file_name = input_damage_plane_fcc.txt
-    damage_loop_diameter = 8E-6 # 8 nm diameter
-    rho_l = 3E13 # irradiation damage loop density
+    damage_loop_diameter = 5.5E-6 # 5.5 nm diameter
+    rho_l = 3E14 # irradiation damage loop density
     eta = 66.6 # Anahiliation Efficiency
     hn = 0.125
-    hd = 0.625
+    hd = 0.091
     xm = 0.05
     #Stochasticity Parameters
 #    stochastic_inhomogenity = true
@@ -527,12 +529,12 @@
   []
   [gb_stress_hydro_avg]
     type = SideAverageValue
-    variable = stress_vm
+    variable = stress_hydro
     boundary = 'grain_boundary'
   []
   [gb_stress_hydro_max]
     type = SideExtremeValue
-    variable = stress_vm
+    variable = stress_hydro
     boundary = 'grain_boundary'
   []
   [stress_vm]

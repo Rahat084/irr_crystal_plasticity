@@ -589,7 +589,8 @@
 [Materials]
   [elasticity_tensor]
     type = ComputeElasticityTensorCP
-    C_ijkl = '2.04e5 1.36e5 1.36e5 2.04e5 1.36e5 2.04e5 1.26e5 1.26e5 1.26e5' # roughly austenitic steel
+    #C_ijkl = '2.04e5 1.36e5 1.36e5 2.04e5 1.36e5 2.04e5 1.26e5 1.26e5 1.26e5' # roughly austenitic steel
+    C_ijkl = '2.24e5 1.496e5 1.496e5 2.464e5 1.1496e5 2.464e5 1.386e5 1.386e5 1.386e5' # roughly austenitic steel
     fill_method = symmetric9
     read_prop_user_object = prop_read
   []
@@ -603,11 +604,12 @@
       base_name = twin
       number_slip_systems = 12
       slip_sys_file_name = 'fcc_input_twinning_systems.txt'
+      twin_strain_rate_sensitivity_exponent = 0.05
       initial_twin_lattice_friction = 100.0
       coplanar_coefficient_twin_hardening = 27000
       non_coplanar_coefficient_twin_hardening = 2000
       non_coplanar_twin_hardening_exponent = 0.05
-      upper_limit_twin_volume_fraction = 0.15
+      upper_limit_twin_volume_fraction = 0.8
   []
   [slip_xtalpl]
     type = CrystalPlasticityUpdateIrr

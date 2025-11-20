@@ -28,10 +28,6 @@
     order = CONSTANT
     family = MONOMIAL
   []
-  [avg_slip_resistance_damage_comp]
-    order = CONSTANT
-    family = MONOMIAL
-  []
   [stress_hydro]
     order = CONSTANT
     family = MONOMIAL
@@ -388,16 +384,16 @@
     boundary = 'left'
     value = 0
   []
-#  [fix_z]
-#    type = DirichletBC
-#    variable = disp_z
-#    boundary = 'back'
-#    value = 0
-#  []
+ # [fix_z]
+ #   type = DirichletBC
+ #   variable = disp_z
+ #   boundary = 'back'
+ #   value = 0
+ # []
   [tdisp]
     type = FunctionDirichletBC
     variable = disp_x
-    boundary = 'right'
+    boundary = right
     function = '0.3*t'
   []
 []
@@ -405,9 +401,10 @@
 [Materials]
   [elasticity_tensor]
     type = ComputeElasticityTensorCP
-    C_ijkl = '2.04e5 1.36e5 1.36e5 2.04e5 1.36e5 2.04e5 1.26e5 1.26e5 1.26e5' # roughly austenitic steel
+    #C_ijkl = '2.04e5 1.36e5 1.36e5 2.04e5 1.36e5 2.04e5 1.26e5 1.26e5 1.26e5' # roughly austenitic steel
+    C_ijkl = '2.24e5 1.496e5 1.496e5 2.464e5 1.1496e5 2.464e5 1.386e5 1.386e5 1.386e5' # roughly austenitic steel
     fill_method = symmetric9
-    euler_angle_variables = '180.0 63.44 90.0' 
+    euler_angle_variables = '0.0 0.0 0.0' 
   []
   [stress]
     type = ComputeMultipleCrystalPlasticityStress
@@ -420,16 +417,16 @@
       number_slip_systems = 12
       slip_sys_file_name = 'fcc_input_twinning_systems.txt'
       initial_twin_lattice_friction = 100.0
-      coplanar_coefficient_twin_hardening = 2000
-      non_coplanar_coefficient_twin_hardening = 27000
+      coplanar_coefficient_twin_hardening = 27000
+      non_coplanar_coefficient_twin_hardening = 2000
       non_coplanar_twin_hardening_exponent = 0.05
-      #upper_limit_twin_volume_fraction = 0.15
+      upper_limit_twin_volume_fraction = 0.8
   []
   [slip_xtalpl]
     type = CrystalPlasticityUpdateIrr
     number_slip_systems = 12
     slip_sys_file_name = input_slip_sys_fcc12.txt
-    euler_angle_variables = '180.0 63.44 90.0' 
+    euler_angle_variables = '0.0 0.0 0.0' 
     total_twin_volume_fraction = 'twin_total_volume_fraction_twins'
     mu0 = 80E3 # shear modulus in GPa
     g0 = 90 # CRSS MPa
@@ -443,11 +440,11 @@
     # Irradiation Hardening Params
     number_possible_damage_plane = 16
     damage_plane_file_name = input_damage_plane_fcc.txt
-    damage_loop_diameter = 8E-6 # 8 nm diameter
-    rho_l = 3E13 # irradiation damage loop density
+    damage_loop_diameter = 5.5E-6 # 5.5 nm diameter
+    rho_l = 3E14 # irradiation damage loop density
     eta = 66.6 # Anahiliation Efficiency
     hn = 0.125
-    hd = 0.625
+    hd = 0.091
     xm = 0.05
 #    stochastic_inhomogenity = true
 #    shape_parameter = 0.5
