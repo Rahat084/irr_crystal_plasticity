@@ -127,7 +127,10 @@ CrystalPlasticityUpdateIrr::CrystalPlasticityUpdateIrr(
     _include_stochastic_inhomogenity(getParam<bool>("stochastic_inhomogenity")),
     _shape_param(getParam<Real>("shape_parameter")),
     // Irradiation Effect
-   _include_irradiation(getParam<bool>("irradiation")) 
+   _include_irradiation(getParam<bool>("irradiation")), 
+   // Random Number generator
+   _rd(),
+   _gen(_rd())
  {
      if (_include_irradiation)
      {
@@ -179,8 +182,6 @@ void
 CrystalPlasticityUpdateIrr::initiateDamageLoopDensity()
 {
 
-    std::random_device rd;
-    std::mt19937 gen(rd());
     std::uniform_int_distribution<> distrib(0, _number_possible_damage_plane - 1);
 
 	RankTwoTensor H; 
@@ -191,7 +192,7 @@ CrystalPlasticityUpdateIrr::initiateDamageLoopDensity()
 
     for (const auto i : make_range(_number_damage_loops))
     {
-	unsigned int randint =  distrib(gen);
+	unsigned int randint =  distrib(_gen);
 	local_loop_normal.assign(3, 0); //= 0.0;
 	for (const auto j : make_range(LIBMESH_DIM))
 	  for (const auto k : make_range(LIBMESH_DIM))
@@ -250,9 +251,14 @@ CrystalPlasticityUpdateIrr::initQpStatefulProperties()
    RankTwoTensor crysrot; 
   CrystalPlasticityStressUpdateBase::initQpStatefulProperties();
    _dislocation_density[_qp].resize(_number_slip_systems);
+
   for (const auto i : make_range(_number_slip_systems))
   {
     _slip_resistance[_qp][i] = _g0;
+    if (_include_stochastic_inhomogenity)
+    {
+	_slip_resistance[_qp][i] = _g0 * stochasticInhomogenityFactor(_gen);
+    }
     _slip_increment[_qp][i] = 0.0;
    _dislocation_density[_qp][i] = _rho_n;
   }
@@ -403,20 +409,14 @@ CrystalPlasticityUpdateIrr::calculateStateVariableEvolutionRateComponent()
 bool
 CrystalPlasticityUpdateIrr::updateStateVariables()
 {
-    /*
-    if (_include_stochastic_inhomogenity)
-    {
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    }
-    */
+
     std::vector<Real> slip_resistance_dislocation_component(_number_slip_systems, 0);
     std::vector<Real> slip_resistance_damage_component(_number_slip_systems, 0);
     RankTwoTensor N = RankTwoTensor::Identity();
   // Now perform the check to see if the slip system should be updated
   _damage_loop_density_increment *= _substep_dt;
   _damage_loop_density[_qp] = _previous_substep_damage_loop_density + _damage_loop_density_increment;
-  for (const auto i : make_range(_number_slip_systems))
+ for (const auto i : make_range(_number_slip_systems))
   {
       _dislocation_density_increment[i] *= _substep_dt;
     if (_dislocation_density_increment[i] < 0.0)
@@ -424,8 +424,8 @@ CrystalPlasticityUpdateIrr::updateStateVariables()
     else
       _dislocation_density[_qp][i] = _previous_substep_dislocation_density[i] + _dislocation_density_increment[i];
       
-if (_include_irradiation)
-{
+   if (_include_irradiation)
+  {
   for (const auto j : make_range(LIBMESH_DIM))
   for (const auto k : make_range(LIBMESH_DIM))
   {
@@ -438,12 +438,6 @@ slip_resistance_damage_component[i] = _mu0 * _b * std::sqrt( _hd * std::abs( N.d
 slip_resistance_dislocation_component[i] = _mu0 * _b * (std::sqrt(_hn * _dislocation_density[_qp][i]));
 _slip_resistance[_qp][i] = slip_resistance_dislocation_component[i] + slip_resistance_damage_component[i]; 
 
-    if (_slip_resistance[_qp][i] > 0 && _include_stochastic_inhomogenity) 
-{ 
-    std::random_device rd;
-    std::mt19937 gen(rd());
-_slip_resistance[_qp][i]*= stochasticInhomogenityFactor(gen);
-}
     if (_slip_resistance[_qp][i] < 0.0)
       return false;
   N.zero();

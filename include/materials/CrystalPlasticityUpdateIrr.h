@@ -249,4 +249,8 @@ Real stochasticInhomogenityFactor( std::mt19937 & gen);
    * Flag to ignore effect of Radiation
    */
   const bool _include_irradiation; 
+
+private:
+  std::random_device _rd;
+  std::mt19937 _gen;
 };
