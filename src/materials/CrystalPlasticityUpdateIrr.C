@@ -37,10 +37,14 @@ CrystalPlasticityUpdateIrr::validParams()
   params.addParam<Real>("ao", 3E4,  "Initial Slip Rate ");
   params.addParam<Real>("xm", 0.05,  "Slip Rate Evolution Power Law exponent");
   params.addParam<Real>("rho_n", 2*10E7,  "Initial dislocation density (mm^-2)");
-  params.addParam<Real>("damage_loop_diameter", 5E-6,  "Average diameter of the damage loop (mm)");
+  params.addParam<Real>("frank_loop_diameter", 5E-6,  "Average diameter of the frank loops (mm)");
+  params.addParam<Real>("shockley_loop_diameter", 5E-6,  "Average diameter of the shockley loops (mm)");
   //Additional Param
-  params.addParam<Real>("cell_vol", 27E-9,  "Simulation Cell Volume (mm^3)");
-  params.addParam<Real>("rho_l", 1.63E13,  "Irradiation damage loop density (mm^-2)");
+  //params.addParam<Real>("cell_vol", 27E-9,  "Simulation Cell Volume (mm^3)");
+  params.addParam<Real>("rho_f0", 1.63E13,  "Initial frank loop density (mm^-2)");
+  params.addParam<Real>("ku", 1,  "Unfaultering Kinetic Constant");
+  params.addParam<Real>("alpha", 1,  "Barrier Strenght Coefficient");
+  params.addParam<Real>("rho_s0", 0.0,  "Initial shockley loop density (mm^-2)");
   params.addParam<Real>("number_damage_loops", 100,  "Number of dislocation loop caused by irradiation damage");
   params.addRequiredParam<unsigned int>("number_possible_damage_plane",  "number of damage planes where irradiation caused damage loop can exists");
   params.addRequiredParam<FileName>(
@@ -73,7 +77,7 @@ CrystalPlasticityUpdateIrr::CrystalPlasticityUpdateIrr(
     //Kocks-Mecking Parameters
     _k1(getParam<Real>("k1")),
     _k20(getParam<Real>("k20")),
-    _number_damage_loops(getParam<Real>("number_damage_loops")),
+//    _number_damage_loops(getParam<Real>("number_damage_loops")),
     _gamma_dot_k0(getParam<Real>("gamma_dot_k0")),
     //_number_possible_damage_plane(getParam<unsigned int>("number_possible_damage_plane")),
     //Adjustable Parameters
@@ -85,14 +89,18 @@ CrystalPlasticityUpdateIrr::CrystalPlasticityUpdateIrr(
     _xm(getParam<Real>("xm")),
     _rho_n(getParam<Real>("rho_n")),
     //Additional Parameter
-    _damage_loop_diameter(getParam<Real>("damage_loop_diameter")),
-    _cell_vol(getParam<Real>("cell_vol")),
-    _rho_l(getParam<Real>("rho_l")),
+    _frank_loop_dia(getParam<Real>("frank_loop_diameter")),
+    _shockley_loop_dia(getParam<Real>("shockley_loop_diameter")),
+    //_cell_vol(getParam<Real>("cell_vol")),
+    _rho_f0(getParam<Real>("rho_f0")),
+    _ku(getParam<Real>("ku")),
+    _alpha(getParam<Real>("alpha")),
+    _rho_s0(getParam<Real>("rho_s0")),
     _dislocation_density_increment(_number_slip_systems, 0.0),
     _number_possible_damage_plane(getParam<unsigned int>("number_possible_damage_plane")),
     _damage_plane_file_name(getParam<FileName>("damage_plane_file_name")),
     _damage_plane_normal(_number_possible_damage_plane),
-    _damage_loop_density_initial(RankTwoTensor::initNone),
+    _damage_loop_direction(RankTwoTensor::initNone),
     _damage_loop_density_increment(RankTwoTensor::initNone),
     // resize local caching vectors used for substepping
     _previous_substep_slip_resistance(_number_slip_systems, 0.0),
@@ -104,6 +112,8 @@ CrystalPlasticityUpdateIrr::CrystalPlasticityUpdateIrr(
     // Initiate State Variables
     _dislocation_density(declareProperty<std::vector<Real>>(_base_name + "dislocation_density")),
     _dislocation_density_old(getMaterialPropertyOld<std::vector<Real>>(_base_name + "dislocation_density")),
+    _slip_accumulation(declareProperty<std::vector<Real>>(_base_name + "slip_accumulation")),
+    _frank_loop_density(declareProperty<std::vector<Real>>(_base_name + "frank_loop_density")),
     _damage_loop_density(declareProperty<RankTwoTensor>(_base_name + "damage_loop_density")),
     _damage_loop_density_old(getMaterialPropertyOld<RankTwoTensor>(_base_name + "damage_loop_density")),
     _equivalent_slip_increment(declareProperty<RankTwoTensor>(_base_name + "equivalent_slip_increment")),
@@ -173,41 +183,26 @@ CrystalPlasticityUpdateIrr::getDamageSystem()
     // normalize
     _damage_plane_normal[i] /= _damage_plane_normal[i].norm();
   }
-	_number_damage_loops =
-	    static_cast<int>(std::round(_rho_l * _cell_vol));
 
 }
 
 void
 CrystalPlasticityUpdateIrr::initiateDamageLoopDensity()
 {
-
-    std::uniform_int_distribution<> distrib(0, _number_possible_damage_plane - 1);
-
 	RankTwoTensor H; 
 	RankTwoTensor Identity = RankTwoTensor::Identity();
-	//For now single crystal
-	RankTwoTensor crysrot = RankTwoTensor::Identity();
-	std::vector<Real> local_loop_normal;
 
-    for (const auto i : make_range(_number_damage_loops))
+    for (const auto i : make_range(_number_possible_damage_plane))
     {
-	unsigned int randint =  distrib(_gen);
-	local_loop_normal.assign(3, 0); //= 0.0;
 	for (const auto j : make_range(LIBMESH_DIM))
 	  for (const auto k : make_range(LIBMESH_DIM))
 	  {
-	local_loop_normal[j] +=  crysrot(j, k) * _damage_plane_normal[randint](k);
-	  }
-	for (const auto j : make_range(LIBMESH_DIM))
-	  for (const auto k : make_range(LIBMESH_DIM))
-	  {
-	H(j, k) +=  (Identity(j, k) - local_loop_normal[j] * local_loop_normal[k]);
+	H(j, k) +=  (Identity(j, k) - _damage_plane_normal[j] * _damage_plane_normal[k]);
     }
 }
-	//_damage_loop_density_initial =  (3 * 100 * _b * H)/_cell_vol;
-	_damage_loop_density_initial =  (3 * _damage_loop_diameter * H)/_cell_vol;
+	_damage_loop_direction =   H;
 	}
+
 RankTwoTensor 
 CrystalPlasticityUpdateIrr::computeQpCrysrot()
 {
@@ -261,11 +256,12 @@ CrystalPlasticityUpdateIrr::initQpStatefulProperties()
     }
     _slip_increment[_qp][i] = 0.0;
    _dislocation_density[_qp][i] = _rho_n;
+   _slip_accumulation[_qp][i] = 0;
   }
   if(_include_irradiation)
   {
   crysrot = computeQpCrysrot();
-  _damage_loop_density[_qp] = _damage_loop_density_initial;
+  _damage_loop_density[_qp] = _rho_s0 *_shockley_loop_dia * _damage_loop_direction;
   _damage_loop_density[_qp].rotate( crysrot); 
   }
 }
@@ -381,6 +377,7 @@ CrystalPlasticityUpdateIrr::cacheStateVariablesBeforeUpdate()
 void
 CrystalPlasticityUpdateIrr::calculateStateVariableEvolutionRateComponent()
 {
+    Real shockley_loop_density_increment = 0.0;
     RankTwoTensor N = RankTwoTensor::Identity();
     _damage_loop_density_increment = 0.0;
   for (const auto i : make_range(_number_slip_systems))
@@ -393,6 +390,10 @@ CrystalPlasticityUpdateIrr::calculateStateVariableEvolutionRateComponent()
 
     if (_include_irradiation)
     {
+// Rate of Conversion from Frank to Shockley Loops
+shockley_loop_density_increment = _frank_loop_density[_qp][i] * _ku * _slip_increment[_qp][i]; 
+_damage_loop_density_increment += shockley_loop_density_increment * _shockley_loop_dia * _damage_loop_direction.rotated(_crysrot[_qp]);
+// Rate of Anhiliation of Shockley Loop glide plane
     for (const auto j : make_range(LIBMESH_DIM))
       for (const auto k : make_range(LIBMESH_DIM))
   {
@@ -418,6 +419,9 @@ CrystalPlasticityUpdateIrr::updateStateVariables()
   _damage_loop_density[_qp] = _previous_substep_damage_loop_density + _damage_loop_density_increment;
  for (const auto i : make_range(_number_slip_systems))
   {
+      // Updata Slip Accumulation
+      _slip_accumulation[_qp][i] += _slip_increment[_qp][i] * _substep_dt;
+      // Updata Dislocation Density
       _dislocation_density_increment[i] *= _substep_dt;
     if (_dislocation_density_increment[i] < 0.0)
       _dislocation_density[_qp][i] = _previous_substep_dislocation_density[i];
@@ -426,14 +430,17 @@ CrystalPlasticityUpdateIrr::updateStateVariables()
       
    if (_include_irradiation)
   {
+      // Calculate Frank Loop Density
+      _frank_loop_density[_qp][i] = _rho_f0 * std::exp(-_ku * _slip_accumulation[_qp][i]); 
+      // Form Glide Plane Matrix N
   for (const auto j : make_range(LIBMESH_DIM))
   for (const auto k : make_range(LIBMESH_DIM))
   {
       N(j, k) = _slip_plane_normal[i](j) * _slip_plane_normal[i](k);
   }
   N.rotate(_crysrot[_qp]);
-//_slip_resistance[_qp][i] = _mu0 * _b * (std::sqrt(_hn * _dislocation_density[_qp][i]) + std::sqrt( _hd * N.doubleContraction( _damage_loop_density[_qp])));  
-slip_resistance_damage_component[i] = _mu0 * _b * std::sqrt( _hd * std::abs( N.doubleContraction( _damage_loop_density[_qp])));
+
+slip_resistance_damage_component[i] = _mu0 * _b * (_alpha * std::sqrt(_frank_loop_density[_qp][i] * _frank_loop_dia) + std::sqrt( _hd * std::abs( N.doubleContraction( _damage_loop_density[_qp]))));
   }
 slip_resistance_dislocation_component[i] = _mu0 * _b * (std::sqrt(_hn * _dislocation_density[_qp][i]));
 _slip_resistance[_qp][i] = slip_resistance_dislocation_component[i] + slip_resistance_damage_component[i]; 

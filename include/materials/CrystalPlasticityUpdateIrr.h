@@ -140,7 +140,7 @@ Real stochasticInhomogenityFactor( std::mt19937 & gen);
   /// @{ Kocks-Mecking Parameters
   const Real _k1;
   const Real _k20;
-  unsigned int _number_damage_loops;
+  //unsigned int _number_damage_loops;
   const Real _gamma_dot_k0;
   ///Maximum number of possible irradiation damage plane in the  crystalline material being modeled
   //const unsigned int _number_possible_damage_plane;
@@ -153,9 +153,13 @@ Real stochasticInhomogenityFactor( std::mt19937 & gen);
   const Real _ao;
   const Real _xm;
   const Real _rho_n;
-  const Real _damage_loop_diameter;
-  const Real _cell_vol;
-  const Real _rho_l;
+  const Real _frank_loop_dia;
+  const Real _shockley_loop_dia;
+  //const Real _cell_vol;
+  const Real _rho_f0;
+  const Real _ku;
+  const Real _alpha;
+  const Real _rho_s0;
   ///
 
   /**
@@ -170,7 +174,7 @@ Real stochasticInhomogenityFactor( std::mt19937 & gen);
   std::string _damage_plane_file_name;
   std::vector<RealVectorValue> _damage_plane_normal;
   /// Increment of increased damage loop for each slip system
-  RankTwoTensor _damage_loop_density_initial;
+  RankTwoTensor _damage_loop_direction;
   RankTwoTensor _damage_loop_density_increment;
 
   /**
@@ -199,6 +203,14 @@ Real stochasticInhomogenityFactor( std::mt19937 & gen);
    */
   MaterialProperty<std::vector<Real>> &  _dislocation_density;
   const MaterialProperty<std::vector<Real>> &  _dislocation_density_old;
+  /**
+   * Accumulated Slip Material Property Variables
+   */
+  MaterialProperty<std::vector<Real>> &  _slip_accumulation;
+  /**
+   * frank loop density Material Property Variables
+   */
+  MaterialProperty<std::vector<Real>> &  _frank_loop_density;
   /**
    * Damage Density Material Property Variables
    */
