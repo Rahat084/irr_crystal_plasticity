@@ -45,7 +45,7 @@ CrystalPlasticityUpdateIrr::validParams()
   params.addParam<Real>("ku", 1,  "Unfaultering Kinetic Constant");
   params.addParam<Real>("alpha", 1,  "Barrier Strenght Coefficient");
   params.addParam<Real>("rho_s0", 0.0,  "Initial shockley loop density (mm^-2)");
-  params.addParam<Real>("number_damage_loops", 100,  "Number of dislocation loop caused by irradiation damage");
+  //params.addParam<Real>("number_damage_loops", 100,  "Number of dislocation loop caused by irradiation damage");
   params.addRequiredParam<unsigned int>("number_possible_damage_plane",  "number of damage planes where irradiation caused damage loop can exists");
   params.addRequiredParam<FileName>(
       "damage_plane_file_name",
@@ -79,7 +79,6 @@ CrystalPlasticityUpdateIrr::CrystalPlasticityUpdateIrr(
     _k20(getParam<Real>("k20")),
 //    _number_damage_loops(getParam<Real>("number_damage_loops")),
     _gamma_dot_k0(getParam<Real>("gamma_dot_k0")),
-    //_number_possible_damage_plane(getParam<unsigned int>("number_possible_damage_plane")),
     //Adjustable Parameters
     _eta(getParam<Real>("eta")),
     _hn(getParam<Real>("hn")),
@@ -105,14 +104,17 @@ CrystalPlasticityUpdateIrr::CrystalPlasticityUpdateIrr(
     // resize local caching vectors used for substepping
     _previous_substep_slip_resistance(_number_slip_systems, 0.0),
     _previous_substep_dislocation_density(_number_slip_systems, 0.0),
+    _previous_substep_slip_accumulation(_number_slip_systems, 0.0),
     _previous_substep_damage_loop_density(RankTwoTensor::initNone),
     _slip_resistance_before_update(_number_slip_systems, 0.0),
     _dislocation_density_before_update(_number_slip_systems, 0.0),
+    _slip_accumulation_before_update(_number_slip_systems, 0.0),
     _damage_loop_density_before_update(RankTwoTensor::initNone),
     // Initiate State Variables
     _dislocation_density(declareProperty<std::vector<Real>>(_base_name + "dislocation_density")),
     _dislocation_density_old(getMaterialPropertyOld<std::vector<Real>>(_base_name + "dislocation_density")),
     _slip_accumulation(declareProperty<std::vector<Real>>(_base_name + "slip_accumulation")),
+    _slip_accumulation_old(getMaterialPropertyOld<std::vector<Real>>(_base_name + "slip_accumulation")),
     _frank_loop_density(declareProperty<std::vector<Real>>(_base_name + "frank_loop_density")),
     _damage_loop_density(declareProperty<RankTwoTensor>(_base_name + "damage_loop_density")),
     _damage_loop_density_old(getMaterialPropertyOld<RankTwoTensor>(_base_name + "damage_loop_density")),
@@ -275,6 +277,8 @@ CrystalPlasticityUpdateIrr::setInitialConstitutiveVariableValues()
   _previous_substep_slip_resistance = _slip_resistance_old[_qp];
   _dislocation_density[_qp] = _dislocation_density_old[_qp];
   _previous_substep_dislocation_density = _dislocation_density_old[_qp];
+  _slip_accumulation[_qp] = _slip_accumulation_old[_qp];
+  _previous_substep_slip_accumulation = _slip_accumulation_old[_qp];
   if (_include_irradiation)
   {
   _damage_loop_density[_qp] = _damage_loop_density_old[_qp];
@@ -288,6 +292,7 @@ CrystalPlasticityUpdateIrr::setSubstepConstitutiveVariableValues()
   // Would also set substepped dislocation densities here if included in this model
   _slip_resistance[_qp] = _previous_substep_slip_resistance;
   _dislocation_density[_qp] = _previous_substep_dislocation_density;
+  _slip_accumulation[_qp] = _previous_substep_slip_accumulation;
   if (_include_irradiation)
   _damage_loop_density[_qp] = _previous_substep_damage_loop_density;
 }
@@ -370,6 +375,7 @@ CrystalPlasticityUpdateIrr::cacheStateVariablesBeforeUpdate()
 {
   _slip_resistance_before_update = _slip_resistance[_qp];
   _dislocation_density_before_update = _dislocation_density[_qp];
+  _dislocation_density_before_update = _slip_accumulation[_qp];
   if (_include_irradiation)
   _damage_loop_density_before_update = _damage_loop_density[_qp];
 }
@@ -420,7 +426,7 @@ CrystalPlasticityUpdateIrr::updateStateVariables()
  for (const auto i : make_range(_number_slip_systems))
   {
       // Updata Slip Accumulation
-      _slip_accumulation[_qp][i] += _slip_increment[_qp][i] * _substep_dt;
+      _slip_accumulation[_qp][i] = _previous_substep_slip_accumulation[i] + _slip_increment[_qp][i] * _substep_dt;
       // Updata Dislocation Density
       _dislocation_density_increment[i] *= _substep_dt;
     if (_dislocation_density_increment[i] < 0.0)
