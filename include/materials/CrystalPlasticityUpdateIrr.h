@@ -183,7 +183,7 @@ Real stochasticInhomogenityFactor( std::mt19937 & gen);
    */
   std::vector<Real> _previous_substep_slip_resistance;
   std::vector<Real> _previous_substep_dislocation_density;
-  std::vector<Real> _previous_substep_slip_accumulation;
+  std::vector<Real> _previous_substep_slip;
   RankTwoTensor _previous_substep_damage_loop_density;
 
   /**
@@ -196,7 +196,7 @@ Real stochasticInhomogenityFactor( std::mt19937 & gen);
    */
   std::vector<Real> _slip_resistance_before_update;
   std::vector<Real> _dislocation_density_before_update;
-  std::vector<Real> _slip_accumulation_before_update;
+  std::vector<Real> _slip_before_update;
   RankTwoTensor _damage_loop_density_before_update;
 
   /**
@@ -205,10 +205,14 @@ Real stochasticInhomogenityFactor( std::mt19937 & gen);
   MaterialProperty<std::vector<Real>> &  _dislocation_density;
   const MaterialProperty<std::vector<Real>> &  _dislocation_density_old;
   /**
+   * Slip Material Property Variables
+   */
+  MaterialProperty<std::vector<Real>> &  _slip;
+  const MaterialProperty<std::vector<Real>> &  _slip_old;
+  /**
    * Accumulated Slip Material Property Variables
    */
   MaterialProperty<std::vector<Real>> &  _slip_accumulation;
-  const MaterialProperty<std::vector<Real>> &  _slip_accumulation_old;
   /**
    * frank loop density Material Property Variables
    */
