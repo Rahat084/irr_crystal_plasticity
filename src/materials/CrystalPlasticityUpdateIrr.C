@@ -248,6 +248,8 @@ CrystalPlasticityUpdateIrr::initQpStatefulProperties()
    RankTwoTensor crysrot; 
   CrystalPlasticityStressUpdateBase::initQpStatefulProperties();
    _dislocation_density[_qp].resize(_number_slip_systems);
+   _slip_accumulation[_qp].resize(_number_slip_systems);
+   _frank_loop_density[_qp].resize(_number_slip_systems);
 
   for (const auto i : make_range(_number_slip_systems))
   {
@@ -258,7 +260,8 @@ CrystalPlasticityUpdateIrr::initQpStatefulProperties()
     }
     _slip_increment[_qp][i] = 0.0;
    _dislocation_density[_qp][i] = _rho_n;
-   _slip_accumulation[_qp][i] = 0;
+   _slip_accumulation[_qp][i] = 0.0;
+   _frank_loop_density[_qp][i] = _rho_f0;
   }
   if(_include_irradiation)
   {

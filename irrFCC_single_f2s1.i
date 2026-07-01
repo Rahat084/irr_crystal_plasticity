@@ -6,9 +6,9 @@
   [cube]
     type = GeneratedMeshGenerator
     dim = 3
-    nx = 40
-    ny = 40
-    nz = 40
+    nx = 2
+    ny = 2
+    nz = 2
     elem_type = HEX8
     xmax = 3E-3
     xmin = 0
@@ -45,6 +45,54 @@
     family = MONOMIAL
   []
   [fp_xx]
+    order = CONSTANT
+    family = MONOMIAL
+  []
+  [frank_loop_density_0]
+    order = CONSTANT
+    family = MONOMIAL
+  []
+  [frank_loop_density_1]
+    order = CONSTANT
+    family = MONOMIAL
+  []
+  [frank_loop_density_2]
+    order = CONSTANT
+    family = MONOMIAL
+  []
+  [frank_loop_density_3]
+    order = CONSTANT
+    family = MONOMIAL
+  []
+  [frank_loop_density_4]
+    order = CONSTANT
+    family = MONOMIAL
+  []
+  [frank_loop_density_5]
+    order = CONSTANT
+    family = MONOMIAL
+  []
+  [frank_loop_density_6]
+    order = CONSTANT
+    family = MONOMIAL
+  []
+  [frank_loop_density_7]
+    order = CONSTANT
+    family = MONOMIAL
+  []
+  [frank_loop_density_8]
+    order = CONSTANT
+    family = MONOMIAL
+  []
+  [frank_loop_density_9]
+    order = CONSTANT
+    family = MONOMIAL
+  []
+  [frank_loop_density_10]
+    order = CONSTANT
+    family = MONOMIAL
+  []
+  [frank_loop_density_11]
     order = CONSTANT
     family = MONOMIAL
   []
@@ -207,7 +255,7 @@
   [eff_plastic_strain_inc]
     type = MaterialRealAux
     variable = eff_plastic_strain_inc
-    property = effective_equivalent_slip_accumulation
+    property = effective_equivalent_slip_increment
     execute_on = timestep_end
   []
   [avg_slip_resistance_dislocation_comp]
@@ -251,6 +299,90 @@
     index_j = 0
     index_i = 0
     execute_on = timestep_end
+  []
+  [frank_loop_density_0]
+   type = MaterialStdVectorAux
+   variable = frank_loop_density_0
+   property = frank_loop_density
+   index = 0
+   execute_on = timestep_end
+  []
+  [frank_loop_density_1]
+   type = MaterialStdVectorAux
+   variable = frank_loop_density_1
+   property = frank_loop_density
+   index = 1 
+   execute_on = timestep_end
+  []
+  [frank_loop_density_2]
+   type = MaterialStdVectorAux
+   variable = frank_loop_density_2
+   property = frank_loop_density
+   index = 2
+   execute_on = timestep_end
+  []
+  [frank_loop_density_3]
+   type = MaterialStdVectorAux
+   variable = frank_loop_density_3
+   property = frank_loop_density
+   index = 3
+   execute_on = timestep_end
+  []
+  [frank_loop_density_4]
+   type = MaterialStdVectorAux
+   variable = frank_loop_density_4
+   property = frank_loop_density
+   index = 4 
+   execute_on = timestep_end
+  []
+  [frank_loop_density_5]
+   type = MaterialStdVectorAux
+   variable = frank_loop_density_5
+   property = frank_loop_density
+   index = 5 
+   execute_on = timestep_end
+  []
+  [frank_loop_density_6]
+   type = MaterialStdVectorAux
+   variable = frank_loop_density_6
+   property = frank_loop_density
+   index = 6 
+   execute_on = timestep_end
+  []
+  [frank_loop_density_7]
+   type = MaterialStdVectorAux
+   variable = frank_loop_density_7
+   property = frank_loop_density
+   index = 7
+   execute_on = timestep_end
+  []
+  [frank_loop_density_8]
+   type = MaterialStdVectorAux
+   variable = frank_loop_density_8
+   property = frank_loop_density
+   index = 8
+   execute_on = timestep_end
+  []
+  [frank_loop_density_9]
+   type = MaterialStdVectorAux
+   variable = frank_loop_density_9
+   property = frank_loop_density
+   index = 9
+   execute_on = timestep_end
+  []
+  [frank_loop_density_10]
+   type = MaterialStdVectorAux
+   variable = frank_loop_density_10
+   property = frank_loop_density
+   index = 10
+   execute_on = timestep_end
+  []
+  [frank_loop_density_11]
+   type = MaterialStdVectorAux
+   variable = frank_loop_density_11
+   property = frank_loop_density
+   index = 11
+   execute_on = timestep_end
   []
   [slip_accumulation_0]
    type = MaterialStdVectorAux
@@ -585,7 +717,7 @@
     shockley_loop_diameter = 5.5E-6 # 5.5 nm diameter
     ku = 1.0
     alpha = 1.0
-    rho_f0 = 3E14 # irradiation damage loop density
+    rho_f0 = 1E14 # irradiation damage loop density
     rho_s0 = 0.0 # irradiation damage loop density
     eta = 100 # Anahiliation Efficiency
     hn = 0.125
@@ -620,6 +752,54 @@
   [fp_xx]
     type = ElementAverageValue
     variable = fp_xx
+  []
+  [frank_loop_density_0]
+    type = ElementAverageValue
+    variable = frank_loop_density_0
+  []
+  [frank_loop_density_1]
+    type = ElementAverageValue
+    variable = frank_loop_density_1
+  []
+  [frank_loop_density_2]
+    type = ElementAverageValue
+    variable = frank_loop_density_2
+  []
+  [frank_loop_density_3]
+    type = ElementAverageValue
+    variable = frank_loop_density_3
+  []
+  [frank_loop_density_4]
+    type = ElementAverageValue
+    variable = frank_loop_density_4
+  []
+  [frank_loop_density_5]
+    type = ElementAverageValue
+    variable = frank_loop_density_5
+  []
+  [frank_loop_density_6]
+    type = ElementAverageValue
+    variable = frank_loop_density_6
+  []
+  [frank_loop_density_7]
+    type = ElementAverageValue
+    variable = frank_loop_density_7
+  []
+  [frank_loop_density_8]
+    type = ElementAverageValue
+    variable = frank_loop_density_8
+  []
+  [frank_loop_density_9]
+    type = ElementAverageValue
+    variable = frank_loop_density_9
+  []
+  [frank_loop_density_10]
+    type = ElementAverageValue
+    variable = frank_loop_density_10
+  []
+  [frank_loop_density_11]
+    type = ElementAverageValue
+    variable = frank_loop_density_11
   []
   [slip_accumulation_0]
     type = ElementAverageValue
